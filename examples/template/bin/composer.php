@@ -50,10 +50,10 @@ switch ($argv[1])
 
         $sftp = new \MVQN\SFTP\SftpClient($host, $port);
         $sftp->login($user, $pass);
-        $sftp->setRemoteBasePath("/home/ucrm/data/ucrm/ucrm/data/plugins/$pluginName/");
+        $sftp->setRemoteBasePath("/home/ucrm-plugin-sdk/data/ucrm-plugin-sdk/ucrm-plugin-sdk/data/plugins/$pluginName/");
         $sftp->setLocalBasePath(__DIR__."/../");
 
-        foreach([ "/ucrm.json", "/data/config.json" ] as $file)
+        foreach([ "/ucrm-plugin-sdk.json", "/data/config.json" ] as $file)
             $data = $sftp->download($file);
 
         break;

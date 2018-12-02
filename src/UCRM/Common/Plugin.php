@@ -67,11 +67,11 @@ final class Plugin
             throw new Exceptions\RequiredFileNotFoundException(
                 "The provided root path '$root' does not contain a 'manifest.json' file!\n");
 
-        // Fail if the ucrm file does not exist!
-        $ucrm = realpath($root."/ucrm.json");
+        // Fail if the ucrm-plugin-sdk file does not exist!
+        $ucrm = realpath($root."/ucrm-plugin-sdk.json");
         if(!$ucrm || !file_exists($ucrm))
             throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'ucrm.json' file!\n");
+                "The provided root path '$root' does not contain a 'ucrm-plugin-sdk.json' file!\n");
 
         self::$_rootPath = $root;
     }
@@ -223,7 +223,7 @@ final class Plugin
      */
     public static function isExecuting(): bool
     {
-        return file_exists(self::getRootPath()."/.ucrm-plugin-execution-requested");
+        return file_exists(self::getRootPath()."/.ucrm-plugin-sdk-plugin-execution-requested");
     }
 
     /**
@@ -232,7 +232,7 @@ final class Plugin
      */
     public static function isRunning(): bool
     {
-        return file_exists(self::getRootPath()."/.ucrm-plugin-running");
+        return file_exists(self::getRootPath()."/.ucrm-plugin-sdk-plugin-running");
     }
 
     // =================================================================================================================
@@ -510,11 +510,11 @@ final class Plugin
             ->setVisibility("public")
             ->addComment("@const string The absolute path to the source path of this project.");
 
-        // IF a ucrm.json file exists...
-        if(file_exists($root."/ucrm.json"))
+        // IF a ucrm-plugin-sdk.json file exists...
+        if(file_exists($root."/ucrm-plugin-sdk.json"))
         {
             // THEN, load the values from the file.
-            $ucrm = json_decode(file_get_contents($root."/ucrm.json"), true);
+            $ucrm = json_decode(file_get_contents($root."/ucrm-plugin-sdk.json"), true);
 
             // Set each value from the file as a constant, as these should NEVER change after the Plugin is installed...
 

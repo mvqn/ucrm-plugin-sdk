@@ -1,6 +1,6 @@
 {
-    "name": "mvqn/ucrm",
-    "description": "A simple UCRM SDK designed to ease Plugin development.",
+    "name": "mvqn/ucrm-plugin-sdk",
+    "description": "An alternative UCRM SDK designed to ease Plugin development.",
     "minimum-stability": "stable",
     "type": "library",
     "license": "MIT",
