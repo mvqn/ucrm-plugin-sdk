@@ -10,7 +10,7 @@ use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
 /**
  * Class General
  *
- * @package MVQN\UCRM\Data
+ * @package UCRM\Data
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *

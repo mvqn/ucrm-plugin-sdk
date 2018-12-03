@@ -31,14 +31,11 @@
     },
     "autoload": {
         "psr-4": {
-            "MVQN\\": "src/MVQN/",
             "UCRM\\": "src/UCRM/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MVQN\\": "tests/MVQN/",
-            "UCRM\\": "tests/UCRM/"
         }
     }
 }

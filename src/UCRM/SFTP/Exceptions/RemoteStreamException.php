@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace MVQN\SFTP\Exceptions;
+namespace UCRM\SFTP\Exceptions;
 
 final class RemoteStreamException extends \Exception
 {

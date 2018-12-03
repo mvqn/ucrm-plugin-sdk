@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace MVQN\SFTP;
+namespace UCRM\SFTP;
 
 /**
  * Class SftpClient
  *
- * @package MVQN\SFTP
+ * @package UCRM\SFTP
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  */
