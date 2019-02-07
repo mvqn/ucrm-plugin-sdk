@@ -107,6 +107,7 @@ use UCRM\REST\Endpoints\Lookups\ClientTag;
  * @method float|null getAddressGpsLon()
  * @method Client setAddressGpsLon(float $longitude)
  * @see    Client::getContacts()
+ * @method Client setContacts(ClientContact[]|null $contacts)
  * @see    Client::getAttributes()
  * @see    Client::setAttributes()
  * @method float|null getAccountBalance()
@@ -421,7 +422,8 @@ final class Client extends EndpointObject
     protected $addressGpsLon;
 
     /**
-     * @var ClientContact[]
+     * @var ClientContact[]|null
+     * @Post
      */
     protected $contacts;
 
@@ -433,6 +435,19 @@ final class Client extends EndpointObject
     {
         return new Collection(ClientContact::class, $this->contacts);
     }
+
+    /**
+     * @param ClientContact[]|null $values
+     * @return Client Returns the Client instance, for method chaining purposes.
+     */
+    /*
+    public function setContacts(?array $values): Client
+    {
+        //$this->contacts = $values->elements();
+        $this->contacts = $values;
+        return $this;
+    }
+    */
 
     /**
      * @var ClientContactAttribute[]

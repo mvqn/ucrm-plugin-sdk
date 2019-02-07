@@ -12,7 +12,7 @@ use MVQN\Collections\Collection;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
  */
-class GeneralTests extends BaseTestCase
+class GeneralTests extends EnpointTestCase
 {
     // =================================================================================================================
     // VERSION TESTS

@@ -6,7 +6,7 @@ namespace UCRM\REST\Endpoints;
 use UCRM\REST\Endpoints\Lookups\TicketActivityComment;
 
 
-class TicketTests extends BaseTestCase
+class TicketTests extends EnpointTestCase
 {
 
     // =================================================================================================================

@@ -9,7 +9,7 @@ use MVQN\REST\Endpoints\EndpointObject;
 use MVQN\REST\RestClient;
 
 
-class BaseTestCase extends \PHPUnit\Framework\TestCase
+class EnpointTestCase extends \PHPUnit\Framework\TestCase
 {
     // =================================================================================================================
     // INITIALIZATION

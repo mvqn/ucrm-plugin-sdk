@@ -11,8 +11,10 @@ use MVQN\Collections\Collection;
  * @package UCRM\REST\Endpoints
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
+ * @coversDefaultClass \UCRM\REST\Endpoints\Client
+ *
  */
-class ClientTests extends BaseTestCase
+class ClientTests extends EnpointTestCase
 {
     // =================================================================================================================
     // CLIENT TESTS - GETTERS
@@ -32,7 +34,7 @@ class ClientTests extends BaseTestCase
     // -----------------------------------------------------------------------------------------------------------------
 
     /**
-     * @covers Client::insert()
+     * @covers Client->insert()
      * @throws \Exception
      */
     public function testInsert()
@@ -93,23 +95,23 @@ class ClientTests extends BaseTestCase
 
             // --- CONTACT DETAILS -------------------------------------------------------------------------------------
             // Primary Contact
-            ->addContact(
-                (new ClientContact())
+            ->setContacts([
+                ((new ClientContact())
                     ->setEmail("potus@usa.gov.notreal")
                     ->setName("Donald Trump")
                     ->setPhone("(202) 555-1234")
                     ->setIsContact(true)
-            )
-            // UNIQUE: Username
-            //->setUsername("potus@usa.gov.notreal")
-            // Additional Contacts...
-            ->addContact(
-                (new ClientContact())
+                ),
+                ((new ClientContact())
                     ->setEmail("accountsreceivable@usa.gov.notreal")
                     ->setName("Steven Mnuchin")
                     ->setPhone("(202) 555-5678")
                     ->setIsBilling(true)
-            )
+                )
+            ])
+
+            // UNIQUE: Username
+            //->setUsername("potus1@usa.gov.notreal")
 
             // --- INVOICE OPTIONS -------------------------------------------------------------------------------------
             // NOTE: Setting any of the below options overrides the defaults.

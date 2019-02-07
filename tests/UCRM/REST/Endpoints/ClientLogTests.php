@@ -12,7 +12,7 @@ use MVQN\Collections\Collection;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
  */
-class ClientLogTests extends BaseTestCase
+class ClientLogTests extends EnpointTestCase
 {
     // =================================================================================================================
     // CLIENT LOG TESTS - GETTERS

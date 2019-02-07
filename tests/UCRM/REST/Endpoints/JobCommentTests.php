@@ -12,7 +12,7 @@ use MVQN\Collections\Collection;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
  */
-class JobCommentTests extends BaseTestCase
+class JobCommentTests extends EnpointTestCase
 {
     // =================================================================================================================
     // JOB COMMENT TESTS - GETTERS

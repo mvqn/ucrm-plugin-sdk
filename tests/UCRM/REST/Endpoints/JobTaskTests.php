@@ -12,7 +12,7 @@ use MVQN\Collections\Collection;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
  */
-class JobTaskTests extends BaseTestCase
+class JobTaskTests extends EnpointTestCase
 {
     /** @var Job */
     public static $job;

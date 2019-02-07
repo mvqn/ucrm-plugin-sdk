@@ -3,10 +3,13 @@ declare(strict_types=1);
 
 namespace UCRM\REST\Endpoints\Helpers;
 
+use UCRM\REST\Endpoints\Exceptions;
+
 use MVQN\Collections\Collection;
 use MVQN\REST\RestClient;
 use UCRM\REST\Endpoints\Client;
 use UCRM\REST\Endpoints\ClientContact;
+use UCRM\REST\Endpoints\Exceptions\ClientContactException;
 use UCRM\REST\Endpoints\Organization;
 
 /**
@@ -104,20 +107,28 @@ trait ClientHelper
     /**
      * @param ClientContact $contact The ClientContact for which to add to the Client's contacts list.
      * @return Client Returns the current Client, for method chaining purposes.
-     * @throws \Exception Throws an Exception if an error occurs.
+     * @throws Exceptions\ClientContactException Throws an Exception if an error occurs.
      */
-    public function addContact(ClientContact $contact): Client
+    public function addContact(ClientContact $contact): self
     {
-        /** @var Client $client */
-        $client = $this;
+        /** @var Client $this */
+
+        if($this->getId() === null)
+        {
+            throw new ClientContactException(
+                "\n A ClientContact may not be added to a Client that does not exists:".
+                "\n - Call Client->insert() before attempting to use Client->addContact() OR".
+                "\n - Call Client->setContacts() to set them before Client->insert()!"
+            );
+        }
 
         if($contact->getId() === null)
         {
-            $contact->setClientId($client->getId());
+            $contact->setClientId($this->getId());
             $contact->insert();
         }
 
-        return $client;
+        return $this;
     }
 
     /**
