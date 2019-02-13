@@ -74,7 +74,7 @@ trait StateHelpers
     public function setStateByCode(string $code): self
     {
         if(!property_exists($this, "countryId") || $this->{"countryId"} === null)
-            throw new \Exception("Country ID must be set before the use of Client->setStateByName()!");
+            throw new \Exception("Country ID must be set before the use of Client->setStateByCode()!");
 
         /** @var Country $country */
         $country = Country::getById($this->{"countryId"});

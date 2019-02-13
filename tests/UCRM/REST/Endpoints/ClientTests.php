@@ -20,6 +20,9 @@ class ClientTests extends EnpointTestCase
     // CLIENT TESTS - GETTERS
     // -----------------------------------------------------------------------------------------------------------------
 
+    /**
+     * @throws \Exception
+     */
     public function testAllGetters()
     {
         /** @var Client $client */
@@ -47,7 +50,7 @@ class ClientTests extends EnpointTestCase
         $client = new Client();
         $client
             // REQUIRED: Organization (NOT AVAILABLE ON EDIT SCREEN)
-            ->setOrganizationId($organization->getId())
+            //->setOrganizationId($organization->getId())
 
             // --- GENERAL ---------------------------------------------------------------------------------------------
             // REQUIRED (FOR COMMERCIAL): Company Name
@@ -56,13 +59,13 @@ class ClientTests extends EnpointTestCase
             ->setCompanyContactFirstName("Donald")
             ->setCompanyContactLastName("Trump")
             // REQUIRED (FOR RESIDENTIAL): First Name
-            //->setFirstName("Donald")
+            ->setFirstName("Donald")
             // REQUIRED (FOR RESIDENTIAL): Last Name
-            //->setLastName("Trump")
+            ->setLastName("Trump")
             // REQUIRED: Client Lead
             ->setIsLead(true)
             // REQUIRED: Company?
-            ->setClientType(Client::CLIENT_TYPE_COMMERCIAL)
+            //->setClientType(Client::CLIENT_TYPE_COMMERCIAL)
             // Registration Number
             ->setCompanyRegistrationNumber("12345")
             // Tax ID
@@ -84,7 +87,7 @@ class ClientTests extends EnpointTestCase
 
             // --- INVOICE ADDRESS -------------------------------------------------------------------------------------
             // REQUIRED: Invoice address is the same as contact address
-            ->setInvoiceAddressSameAsContact(true)
+            ->setInvoiceAddressSameAsContact(false)
             // REQUIRED (WHEN NOT THE SAME)
             //->setInvoiceStreet1("")
             //->setInvoiceStreet2("") // NOT REQUIRED!
@@ -124,6 +127,7 @@ class ClientTests extends EnpointTestCase
             // Suspension delay
             ->setStopServiceDueDays(10)
             // MISSING: Late fee delay (NO API???)
+            ->resetInvoiceMaturityDays()
 
             // --- TAXES -----------------------------------------------------------------------------------------------
             // Tax 1
@@ -140,7 +144,11 @@ class ClientTests extends EnpointTestCase
             // Previous ISP
             ->setPreviousIsp("ARPANET")
             // REQUIRED: Registration date
-            ->setRegistrationDate(new \DateTime());
+            ->setRegistrationDate(new \DateTime("02/12/2019"));
+
+            //->setUsername("test123")
+            //->setUsername(null);
+
 
         // --- CUSTOM ATTRIBUTES -----------------------------------------------------------------------------------
         // TODO: Test Attributes Later!
