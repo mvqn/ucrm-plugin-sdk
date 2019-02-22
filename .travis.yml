@@ -12,3 +12,10 @@ install:
     - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
     - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
 
+deploy:
+    provider: releases
+    user: $GITHUB_USERNAME
+    password: $GITHUB_PASSWORD
+    file: "README.md"
+    skip_cleanup: true
+    draft: true
