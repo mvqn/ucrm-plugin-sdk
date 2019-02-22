@@ -18,8 +18,11 @@ stages:
 jobs:
     include:
         - stage: stable
+          script: "Unit Tests"
         - stage: beta
+          script: "Unit Tests"
         - stage: release
+          script: skip
           deploy:
               provider: releases
               #user: $GITHUB_USERNAME
