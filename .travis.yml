@@ -11,5 +11,5 @@ branches:
 before_install:
     - composer install
 
-script:
-    - phpunit --bootstrap ./vendor/autoload.php ./tests/UCRM/REST/Endpoints/GeneralTests.php
+#script:
+    #- phpunit --bootstrap ./vendor/autoload.php ./tests/UCRM/REST/Endpoints/GeneralTests.php

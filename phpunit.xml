@@ -1,0 +1,9 @@
+<phpunit bootstrap="vendor/autoload.php">
+    <testsuites>
+        <testsuite name="General">
+            <file>tests/UCRM/REST/Endpoints/GeneralTests.php</file>
+        </testsuite>
+
+
+    </testsuites>
+</phpunit>
