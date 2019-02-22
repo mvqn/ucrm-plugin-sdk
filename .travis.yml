@@ -8,8 +8,16 @@ branches:
     only:
         - master
 
+stages:
+    -
+
+
 jobs:
     include:
+        - stage: Tests
+          install:
+              - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];     then composer install --no-dev;     fi
+              - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];     then composer install;              fi
         - stage: Tests
           install:
               - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];     then composer install --no-dev;     fi
