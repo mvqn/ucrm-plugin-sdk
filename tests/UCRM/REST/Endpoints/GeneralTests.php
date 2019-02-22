@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace UCRM\REST\Endpoints;
 
+require_once __DIR__."/EndpointTestCase.php";
+
 use MVQN\Collections\Collection;
 
 /**
