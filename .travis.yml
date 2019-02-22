@@ -30,7 +30,6 @@ jobs:
 
         - stage: release
           name: "GitHub (Draft)"
-          php: skip
           install: skip
           script: skip
           deploy:
