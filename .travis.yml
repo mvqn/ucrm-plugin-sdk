@@ -8,7 +8,19 @@ branches:
     only:
         - master
 
-install:
-    - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
-    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
+jobs:
+    include:
+        - stage: stable
+          if: "$TRAVIS_PHPVERSION" = "7.1.26"
+          name: "UCRM: Stable"
+          install: composer install --no-dev
+        - stage: beta
+          if: "$TRAVIS_PHPVERSION" = "7.2.14"
+          name: "UCRM: Beta"
+          install: composer install
+
+
+#install:
+#    - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
+#    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
 
