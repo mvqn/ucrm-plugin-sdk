@@ -9,21 +9,17 @@ branches:
         - master
 
 stages:
-    -
-
+    - name: stable
+      if: env(TRAVIS_PHP_VERSION) = 7.1.26
+    - name: beta
+      if: env(TRAVIS_PHP_VERSION) = 7.2.14
+    - name: release
 
 jobs:
     include:
-        - stage: Tests
-          install:
-              - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];     then composer install --no-dev;     fi
-              - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];     then composer install;              fi
-        - stage: Tests
-          install:
-              - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];     then composer install --no-dev;     fi
-              - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];     then composer install;              fi
-
-        - stage: GitHub Release
+        - stage: stable
+        - stage: beta
+        - stage: release
           deploy:
               provider: releases
               #user: $GITHUB_USERNAME
