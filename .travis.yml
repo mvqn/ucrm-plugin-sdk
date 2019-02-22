@@ -12,4 +12,4 @@ before_install:
     - composer install
 
 script:
-    - phpunit ./tests/UCRM/REST/Endpoints/GeneralTests.php
+    - phpunit --bootstrap ./vendor/autoload.php ./tests/UCRM/REST/Endpoints/GeneralTests.php
