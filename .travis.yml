@@ -14,15 +14,12 @@ install:
 
 jobs:
     include:
-        - stage: tests
-          name: "Stable"
+        - stage: tests stable
           if: env(TRAVIS_PHP_VERSION) = 7.1.26
           script: "Unit Tests"
 
-        - stage: tests
-          name: "Beta"
+        - stage: tests beta
           if: env(TRAVIS_PHP_VERSION) = 7.2.14
-          #install: composer install
           script: "Unit Tests"
 
         - stage: release
