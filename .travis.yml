@@ -11,12 +11,12 @@ branches:
 jobs:
     include:
         - stage: stable
-          if: env(TRAVIS_PHP_VERSION) = "7.1.26"
-          #name: "UCRM: Stable"
+          if: "$TRAVIS_PHP_VERSION" = "7.1.26"
+          name: "UCRM: Stable"
           install: composer install --no-dev
         - stage: beta
-          if: env(TRAVIS_PHP_VERSION) = "7.2.14"
-          #name: "UCRM: Beta"
+          if: "$TRAVIS_PHP_VERSION" = "7.2.14"
+          name: "UCRM: Beta"
           install: composer install
 
 
