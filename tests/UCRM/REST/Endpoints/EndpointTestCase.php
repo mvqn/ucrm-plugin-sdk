@@ -23,7 +23,7 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
     protected function setUp()
     {
         // Load ENV variables from a file during development.
-        if(file_exists(self::DOTENV_PATH))
+        if(file_exists(self::DOTENV_PATH.".env"))
         {
             $dotenv = new \Dotenv\Dotenv(self::DOTENV_PATH);
             $dotenv->load();
