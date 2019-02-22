@@ -8,18 +8,22 @@ branches:
     only:
         - master
 
+install:
+    - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
+    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
+
 jobs:
     include:
         - stage: tests
           if: env(TRAVIS_PHP_VERSION) = 7.1.26
           name: Stable
-          install: composer install --no-dev
+          #install: composer install --no-dev
           script: "Unit Tests"
 
         - stage: tests
           if: env(TRAVIS_PHP_VERSION) = 7.2.14
           name: Beta
-          install: composer install
+          #install: composer install
           script: "Unit Tests"
 
         - stage: release
@@ -34,9 +38,7 @@ jobs:
               draft: true
 
 
-#install:
-#    - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
-#    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
+
 
 #deploy:
 #    provider: releases
