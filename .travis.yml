@@ -1,4 +1,15 @@
 language: php
+
 php:
     - 7.1.13
     - 7.2.14
+
+branches:
+    only:
+        - master
+
+before_install:
+    - composer install
+
+script:
+    - phpunit ./tests/UCRM/REST/Endpoints/GeneralTests.php
