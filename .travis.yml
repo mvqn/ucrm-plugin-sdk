@@ -2,13 +2,13 @@ language: php
 
 php:
     - 7.1.13
-    - 7.2.14
+    #- 7.2.14
 
 branches:
     only:
         - master
 
-before_install:
+install:
     - composer install
 
 script:
