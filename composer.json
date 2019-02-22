@@ -33,12 +33,11 @@
     },
     "autoload": {
         "psr-4": {
-            "UCRM\\": "src/UCRM/"
+            "UCRM\\": [ "src/UCRM/", "tests/UCRM/" ]
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "UCRM\\": "tests/UCRM/"
         }
     }
 }
