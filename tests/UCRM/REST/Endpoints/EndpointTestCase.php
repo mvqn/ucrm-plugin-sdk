@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace UCRM\REST\Endpoints;
 
+require_once __DIR__."/EndpointTestCase.php";
+
 use MVQN\Annotations\AnnotationReader;
 use MVQN\Collections\Collectible;
 use MVQN\REST\Endpoints\EndpointObject;
@@ -16,7 +18,7 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
     // -----------------------------------------------------------------------------------------------------------------
 
     /** @var string Location of the .env file for development. */
-    protected const DOTENV_PATH = __DIR__ . "/../../../../";
+    const DOTENV_PATH = __DIR__ . "/../../../../";
 
     protected function setUp()
     {
