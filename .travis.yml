@@ -8,7 +8,7 @@ branches:
     only:
         - master
 
-before_install:
+install:
     - composer install
 
 #script:
