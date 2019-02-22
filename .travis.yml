@@ -8,17 +8,18 @@ branches:
     only:
         - master
 
-matrix:
-    include:
-        - php: 7.1.26
-          env: COMPOSER_ARGS="--no-dev"
-          install: composer install $COMPOSER_ARGS
-        - php: 7.2.13
-          env: COMPOSER_ARGS=""
-          install: composer install $COMPOSER_ARGS
+#matrix:
+#    include:
+#        - php: 7.1.26
+#          env: COMPOSER_ARGS="--no-dev"
+#          install: composer install $COMPOSER_ARGS
+#        - php: 7.2.13
+#          env: COMPOSER_ARGS=""
+#          install: composer install $COMPOSER_ARGS
 
-#install:
-    #- composer install $COMPOSER_ARGS
+install:
+    - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]]; then composer install --no-dev
+    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.13" ]]; then composer install
 
 #script:
     #- phpunit --bootstrap ./vendor/autoload.php ./tests/UCRM/REST/Endpoints/GeneralTests.php
