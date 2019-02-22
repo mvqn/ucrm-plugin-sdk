@@ -14,7 +14,7 @@ use MVQN\Collections\Collection;
  * @coversDefaultClass \UCRM\REST\Endpoints\Client
  *
  */
-class ClientTests extends EnpointTestCase
+class ClientTests extends EndpointTestCase
 {
     // =================================================================================================================
     // CLIENT TESTS - GETTERS
