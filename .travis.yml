@@ -12,11 +12,13 @@ matrix:
     include:
         - php: 7.1.26
           env: COMPOSER_ARGS="--no-dev"
+          install: composer install $COMPOSER_ARGS
         - php: 7.2.13
           env: COMPOSER_ARGS=""
+          install: composer install $COMPOSER_ARGS
 
-install:
-    - composer install $COMPOSER_ARGS
+#install:
+    #- composer install $COMPOSER_ARGS
 
 #script:
     #- phpunit --bootstrap ./vendor/autoload.php ./tests/UCRM/REST/Endpoints/GeneralTests.php
