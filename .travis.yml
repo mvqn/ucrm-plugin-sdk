@@ -14,8 +14,9 @@ install:
 
 deploy:
     provider: releases
-    user: $GITHUB_USERNAME
-    password: $GITHUB_PASSWORD
-    file: "README.md"
+    #user: $GITHUB_USERNAME
+    #password: $GITHUB_PASSWORD
+    api_key: $GITHUB_TOKEN
+    #file: "README.md"
     skip_cleanup: true
     draft: true
