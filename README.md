@@ -1,2 +1,2 @@
-# mvqn/ucrm
-A simple UCRM SDK designed to ease Plugin development.
+# mvqn/ucrm-plugin-sdk
+An alternative UCRM SDK designed to ease Plugin development.
