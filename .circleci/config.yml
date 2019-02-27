@@ -19,4 +19,5 @@ workflows:
 
     build_and_test:
         jobs:
-            - test_beta
+            - test_beta:
+                  context: ucrm.dev.mvqn.net
