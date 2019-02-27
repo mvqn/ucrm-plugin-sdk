@@ -22,16 +22,13 @@ jobs:
         - stage: beta
           if: env(TRAVIS_PHP_VERSION) = 7.2.14
 
+        # Create a Release (Draft) on GitHub
         - stage: release
-          name: "GitHub (Draft)"
           install: skip
           script: skip
           deploy:
               provider: releases
-              #user: $GITHUB_USERNAME
-              #password: $GITHUB_PASSWORD
               api_key: $GITHUB_TOKEN
-              #file: "README.md"
               skip_cleanup: true
               draft: true
 
