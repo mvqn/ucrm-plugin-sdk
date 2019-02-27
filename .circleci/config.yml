@@ -6,7 +6,11 @@ jobs:
             - image: circleci/php:7.2.15
         steps:
             - checkout
-            - run: phpunit
+            - run: sudo pwd
+            - run: sudo composer self-update
+            - run: sudo composer install
+
+
 
 
 workflows:
