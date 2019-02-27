@@ -4,12 +4,13 @@ jobs:
     test_beta:
         docker:
             - image: circleci/php:7.2.15
+
         steps:
             - checkout
             - run: sudo pwd
             - run: sudo composer self-update
             - run: sudo composer install
-            - run: sudo find / -name phpunit
+            - run: sudo vendor/bin/phpunit --configuration phpunit.xml
 
 
 
