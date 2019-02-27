@@ -11,6 +11,7 @@ jobs:
             - run: sudo composer self-update
             - run: sudo composer install
             - run: sudo vendor/bin/phpunit --configuration phpunit.xml
+            - run: echo $REST_URL
 
 
 
