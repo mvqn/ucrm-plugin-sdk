@@ -74,6 +74,7 @@ class QueryStringRouter
     public static function extractRouteFromQueryString(string &$queryString): string
     {
         //echo "$queryString\n";
+        $queryString = str_replace("%2F", "/", $queryString);
 
         $parts = explode("&", $queryString);
 
