@@ -24,7 +24,7 @@ final class ScriptController
      *
      * @param App $app The Slim Application for which to configure routing.
      */
-    public function __construct(App $app)
+    public function __construct(App $app, callable $verification = null)
     {
         // Get a local reference to the Slim Application's DI Container.
         $container = $app->getContainer();
@@ -61,7 +61,7 @@ final class ScriptController
                 // The PHP script should handle everything and since there is no Response to return, simply die()!
                 die();
             }
-        )->add(new PluginAuthentication($container))->setName("script");
+        )->add(new PluginAuthentication($container, $verification))->setName("script");
     }
 
 }

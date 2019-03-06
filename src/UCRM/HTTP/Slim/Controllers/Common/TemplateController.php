@@ -24,7 +24,7 @@ final class TemplateController
      *
      * @param App $app The Slim Application for which to configure routing.
      */
-    public function __construct(App $app)
+    public function __construct(App $app, callable $verification = null)
     {
         // Get a local reference to the Slim Application's DI Container.
         $container = $app->getContainer();
@@ -57,7 +57,7 @@ final class TemplateController
                     // OTHERWISE, return the default 404 page!
                     return $container->get("notFoundHandler")($request, $response, $data);
             }
-        )->add(new PluginAuthentication($container))->setName("template");
+        )->add(new PluginAuthentication($container, $verification))->setName("template");
     }
 
 

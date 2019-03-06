@@ -29,8 +29,10 @@ class PluginAuthentication
     /**
      * @var array An array of allowed User Groups in the UCRM for which to validate the currently authenticated user.
      */
-    protected $allowedUserGroups;
-
+    //protected $allowedUserGroups;
+    /** @var callable|null */
+    protected $verification;
+    protected $allowed;
 
 
     /**
@@ -39,10 +41,12 @@ class PluginAuthentication
      * @param Container $container
      * @param array $allowedUserGroups
      */
-    public function __construct(Container $container, array $allowedUserGroups = self::DEFAULT_ALLOWED_USER_GROUPS)
+    public function __construct(Container $container, callable $verification = null  /* array $allowedUserGroups = self::DEFAULT_ALLOWED_USER_GROUPS */)
     {
         $this->container = $container;
-        $this->allowedUserGroups = $allowedUserGroups;
+        //$this->allowedUserGroups = $allowedUserGroups;
+        //$this->allowed = $verification !== null ? $verification() : true;
+        $this->verification = $verification;
     }
 
 
@@ -73,8 +77,16 @@ class PluginAuthentication
             Log::http("No User is currently Authenticated!", 401);
 
         // Display an error if the authenticated user is NOT part of a valid User Group!
-        if(!in_array($user->getUserGroup(), $this->allowedUserGroups))
-            Log::http("Currently Authenticated User is not in any allowed User Group!", 401);
+        //if(!in_array($user->getUserGroup(), $this->allowedUserGroups))
+        //if(!$this->allowed)
+
+        if($this->verification !== null && is_callable($this->verification) && !($this->verification)($user))
+        {
+            //Log::http("Currently Authenticated User is not allowed!", 401);
+            http_response_code(401);
+            exit();
+        }
+
 
         // Set the current session user on the container, for later use in the application.
         $this->container["sessionUser"] = $user;
