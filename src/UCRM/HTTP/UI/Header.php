@@ -39,6 +39,11 @@ final class Header
     public static function renderTitle()
     {
         echo '
+        <style>
+        
+        
+        
+        </style>
         
 
         <div style="page-header__top">
