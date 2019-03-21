@@ -27,9 +27,7 @@ jobs:
                     echo "HOST_URL=$HOST_URL" >> .env
                     echo "CRYPTO_KEY=$CRYPTO_KEY" >> .env
 
-                    echo "Using the following .env file:"
-                    echo ""
-                    cat .env
+
             - run:
                 name: "Tests: General"
                 command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
