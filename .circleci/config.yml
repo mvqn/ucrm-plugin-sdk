@@ -30,7 +30,7 @@ jobs:
 
             - run:
                 name: "Tests: General"
-                command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite General
+                command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
             - run:
                 name: "Tests: Client"
                 command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite Client
