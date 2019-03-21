@@ -14,14 +14,17 @@ jobs:
                     sudo composer install
             - run:
                 name: "Create '.env' File"
-                command: >
-                    echo "REST_URL=$REST_URL" >> .env &&
-                    echo "REST_KEY=$REST_KEY" >> .env &&
+                command: |
+                    echo "REST_URL=$REST_URL" >> .env
+                    echo "REST_KEY=$REST_KEY" >> .env
+                    echo "Using the following '.env' file:\n"
                     cat .env
             - run:
-                name: "Tests"
-                command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
-
+                name: "Tests: General"
+                command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
+            - run:
+                name: "Tests: Client"
+                command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite Client
 
 
 
