@@ -26,8 +26,8 @@ jobs:
             - run:
                 name: "Create '.env' File"
                 command: >
-                    echo 'export REST_URL="$REST_URL"' >> .env &&
-                    echo 'export REST_KEY="$REST_KEY"' >> .env &&
+                    echo 'REST_URL="$(echo $REST_URL)"' >> .env &&
+                    echo 'REST_KEY=$REST_KEY' >> .env &&
                     cat .env
             - run:
                 name: "Testing Environment Variables"
