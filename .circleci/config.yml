@@ -5,6 +5,10 @@ jobs:
         docker:
             - image: circleci/php:7.2.15
 
+        environment:
+            REST_KEY: $REST_KEY
+            REST_URL: $REST_URL
+
         steps:
             - checkout
             - run: sudo pwd
