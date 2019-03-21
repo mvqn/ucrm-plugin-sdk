@@ -17,6 +17,8 @@ install:
     - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
     - if [[ "$TRAVIS_PHP_VERSION" == "7.2.15" ]];   then composer install;              fi
 
+
+
 jobs:
     include:
         - stage: 2.14.8
@@ -29,14 +31,14 @@ jobs:
           script: phpunit -v
 
         # Create a Release (Draft) on GitHub
-        - stage: release
-          install: skip
-          script: skip
-          deploy:
-              provider: releases
-              api_key: $GITHUB_TOKEN
-              skip_cleanup: true
-              draft: true
+        #- stage: release
+        #  install: skip
+        #  script: skip
+        #  deploy:
+        #      provider: releases
+        #      api_key: $GITHUB_TOKEN
+        #      skip_cleanup: true
+        #      draft: true
 
 
 
