@@ -27,9 +27,7 @@ jobs:
             - run:
                 name: "Testing Environment Variables"
                 command: echo $REST_URL
-            - run:
-                name: "Testing Environment Variables"
-                command: create_env
+            - create_env
             - run:
                 name: "Tests"
                 command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml
