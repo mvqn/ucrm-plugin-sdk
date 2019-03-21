@@ -1,8 +1,12 @@
 language: php
 
 php:
-    - 7.1.26    # UCRM: 2.14.8
-    - 7.2.14    # UCRM: 2.15.0-beta6
+    # UCRM: 2.14.8
+    #- 7.1.26
+    # UCRM: 2.15.0-beta6
+    #- 7.2.14
+    # UCRM: 2.15.0
+    - 7.2.15
 
 branches:
     only:
@@ -11,16 +15,17 @@ branches:
 install:
     - if [[ "$TRAVIS_PHP_VERSION" == "7.1.26" ]];   then composer install --no-dev;     fi
     - if [[ "$TRAVIS_PHP_VERSION" == "7.2.14" ]];   then composer install;              fi
+    - if [[ "$TRAVIS_PHP_VERSION" == "7.2.15" ]];   then composer install;              fi
 
 jobs:
     include:
-        # Test for the PHP version used in UCRM (stable)
-        - stage: stable
+        - stage: 2.14.8
           if: env(TRAVIS_PHP_VERSION) = 7.1.26
-
-        # Test for the PHP version used in UCRM (beta)
-        - stage: beta
+        - stage: 2.15.0-beta6
           if: env(TRAVIS_PHP_VERSION) = 7.2.14
+        - stage: 2.15.0
+          if: env(TRAVIS_PHP_VERSION) = 7.2.15
+
 
         # Create a Release (Draft) on GitHub
         - stage: release
