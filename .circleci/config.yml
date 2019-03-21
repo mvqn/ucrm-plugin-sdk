@@ -1,7 +1,7 @@
 version: 2.1
 
 commands:
-    createEnv:
+    create_env:
         description: "Setups up the .env file, using secure variables!"
         steps:
             - run: echo 'REST_URL="$REST_URL"' >> .env
@@ -29,7 +29,7 @@ jobs:
                 command: echo $REST_URL
             - run:
                 name: "Testing Environment Variables"
-                command: createEnv
+                command: create_env
             - run:
                 name: "Tests"
                 command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml
