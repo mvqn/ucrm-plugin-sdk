@@ -5,9 +5,9 @@ jobs:
         docker:
             - image: circleci/php:7.2.15
 
-        environment:
-            REST_KEY: 123
-            REST_URL: 456
+        #environment:
+        #    REST_KEY: 123
+        #    REST_URL: 456
 
         steps:
             - checkout
