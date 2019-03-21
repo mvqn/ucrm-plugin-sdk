@@ -13,9 +13,9 @@ jobs:
             - run:
                 name: "Environment Variables"
                 command: echo 'export REST_URL="$REST_URL"' >> $BASH_ENV
-             - run:
-                 name: "Testing Environment Variables"
-                 command: echo $REST_URL
+            - run:
+                name: "Testing Environment Variables"
+                command: echo $REST_URL
             - run: sudo vendor/bin/phpunit --configuration phpunit.xml
 
 
