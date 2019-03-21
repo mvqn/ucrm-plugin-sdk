@@ -30,17 +30,17 @@ jobs:
 
             - run:
                 name: "Tests: General"
-                command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
+                command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite General
             - run:
                 name: "Tests: Client"
-                command: sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite Client
+                command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite Client
 
-            #- run:
-            #    name: "Code Coverage"
-            #    command: phpdbg -qrr vendor/bin/phpunit --coverage-html build/coverage-report
+            - run:
+                name: "Code Coverage"
+                command: phpdbg -qrr vendor/bin/phpunit --coverage-html build/coverage-report
 
-            #- store_artifacts:
-            #      path: build/coverage-report
+            - store_artifacts:
+                  path: build/coverage-report
 
 
 workflows:

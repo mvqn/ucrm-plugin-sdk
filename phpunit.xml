@@ -11,7 +11,8 @@
 
     <filter>
         <whitelist>
-            <directory suffix=".php">src</directory>
+            <!--<directory suffix=".php">src</directory>-->
+            <file>tests/UCRM/REST/Endpoints/GeneralTests.php</file>
         </whitelist>
     </filter>
 
