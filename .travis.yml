@@ -21,13 +21,13 @@ install:
 
 jobs:
     include:
-        - stage: 2.14.8
+        - stage: test #2.14.8
           if: env(TRAVIS_PHP_VERSION) = 7.1.26
           script: echo "2.14.8"
-        - stage: 2.15.0-beta6
+        - stage: beta #2.15.0-beta6
           if: env(TRAVIS_PHP_VERSION) = 7.2.14
           script: echo "2.15.0-beta6"
-        - stage: 2.15.0
+        - stage: new #2.15.0
           if: env(TRAVIS_PHP_VERSION) = 7.2.15
           #name: "UCRM 2.15.0"
           #script: phpunit -v
