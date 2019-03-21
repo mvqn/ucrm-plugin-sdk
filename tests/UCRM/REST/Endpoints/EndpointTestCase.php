@@ -31,6 +31,8 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
 
         //RestClient::cacheDir(__DIR__);
 
+        echo "Using REST_URL: '".getenv("REST_URL")."'\n";
+
         RestClient::setBaseUrl(getenv("REST_URL"));
         RestClient::setHeaders([
             "Content-Type: application/json",
