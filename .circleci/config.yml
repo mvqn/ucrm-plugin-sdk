@@ -35,12 +35,12 @@ jobs:
                 name: "Tests: Client"
                 command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite Client
 
-            - run:
-                name: "Code Coverage"
-                command: phpdbg -qrr vendor/bin/phpunit --coverage-html build/coverage-report
+            #- run:
+            #    name: "Code Coverage"
+            #    command: phpdbg -qrr vendor/bin/phpunit --coverage-html build/coverage-report
 
-            - store_artifacts:
-                  path: build/coverage-report
+            #- store_artifacts:
+            #      path: build/coverage-report
 
 
 workflows:
