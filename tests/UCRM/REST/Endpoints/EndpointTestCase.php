@@ -68,7 +68,7 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
             print_r($results);
         }
 
-
+        echo "\n";
 
 
     }
