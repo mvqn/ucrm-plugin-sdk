@@ -4,8 +4,8 @@ commands:
     create_env:
         description: "Setups up the .env file, using secure variables!"
         steps:
-            - run: echo 'REST_URL="$REST_URL"' >> .env
-            - run: echo 'REST_KEY="$REST_KEY"' >> .env
+            - run: echo "REST_URL=$REST_URL" >> .env
+            - run: echo "REST_KEY=$REST_KEY" >> .env
             - run: cat .env
 
 jobs:
@@ -30,11 +30,8 @@ jobs:
                     echo "REST_KEY=$REST_KEY" >> .env &&
                     cat .env
             - run:
-                name: "Testing Environment Variables"
-                command: echo $REST_URL
-            #- run:
-            #    name: "Tests"
-            #    command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml
+                name: "Tests"
+                command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml --testsuite General
 
 
 
