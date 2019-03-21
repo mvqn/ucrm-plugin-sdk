@@ -19,6 +19,7 @@ jobs:
             - run:
                 name: "Testing Environment Variables"
                 command: echo $REST_URL
+            - run: cat /home/ubuntu/.circlerc
             - run:
                 name: "Tests"
                 command: echo $REST_URL && sudo vendor/bin/phpunit --configuration phpunit.xml
