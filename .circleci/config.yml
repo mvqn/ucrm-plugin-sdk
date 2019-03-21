@@ -14,7 +14,7 @@ jobs:
             - run: sudo pwd
             - run: sudo composer self-update
             - run: sudo composer install
-            - run: echo $REST_URL
+            - run: echo "$REST_URL"
             - run: sudo vendor/bin/phpunit --configuration phpunit.xml
 
 
