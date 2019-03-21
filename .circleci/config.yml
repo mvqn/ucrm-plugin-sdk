@@ -5,6 +5,9 @@ jobs:
         docker:
             - image: circleci/php:7.2.15
 
+        environment:
+            REST_URL: "https://ucrm.dev.mvqn.net/api/v1.0"
+
         steps:
             - checkout
             - run: sudo pwd
