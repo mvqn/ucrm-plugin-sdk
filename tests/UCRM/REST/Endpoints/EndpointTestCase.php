@@ -61,11 +61,12 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
             is_a($results, \JsonSerializable::class) ||
             method_exists($results, "__toString"))
         {
-            echo $results;
+            echo $results."\n";
         }
         else
         {
             print_r($results);
+            echo "\n";
         }
 
         echo "\n";
