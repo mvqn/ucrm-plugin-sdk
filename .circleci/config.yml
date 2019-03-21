@@ -14,7 +14,9 @@ jobs:
             - run: sudo pwd
             - run: sudo composer self-update
             - run: sudo composer install
-            - run: export REST_URL="$REST_URL" && echo $REST_URL
+            - run:
+                name: "Environment Variables"
+                command: echo 'export REST_URL="$REST_URL"' >> $BASH_ENV
             - run: sudo vendor/bin/phpunit --configuration phpunit.xml
 
 
