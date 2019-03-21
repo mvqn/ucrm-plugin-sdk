@@ -28,6 +28,7 @@ jobs:
                     echo "CRYPTO_KEY=$CRYPTO_KEY" >> .env
 
                     echo "Using the following .env file:"
+                    echo ""
                     cat .env
             - run:
                 name: "Tests: General"
