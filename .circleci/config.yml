@@ -12,6 +12,7 @@ jobs:
                 command: |
                     sudo composer self-update
                     sudo composer install
+
             - run:
                 name: "Create File: .env"
                 command: |
@@ -27,13 +28,15 @@ jobs:
                     echo "HOST_URL=$HOST_URL" >> .env
                     echo "CRYPTO_KEY=$CRYPTO_KEY" >> .env
 
-
             - run:
                 name: "Tests: General"
                 command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite General
+
             - run:
                 name: "Tests: Client"
                 command: sudo vendor/bin/phpunit --debug --configuration phpunit.xml --testsuite Client
+
+
 
             #- run:
             #    name: "Code Coverage"

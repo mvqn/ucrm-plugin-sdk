@@ -16,26 +16,25 @@ use Nette\PhpGenerator\PhpNamespace;
  */
 final class Plugin
 {
-
-
-
-
     // =================================================================================================================
     // CONSTANTS
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
+    // The default class name for the Settings singleton.
     private const DEFAULT_SETTINGS_CLASSNAME = "Settings";
+
+    // The default namespace for the Settings singleton.
     private const DEFAULT_SETTINGS_NAMESPACE = "Plugin";
 
     // =================================================================================================================
     // INITIALIZATION
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
     /**
      * Initializes the Plugin singleton. This method should ALWAYS be called before any other method here, with the
      * exception of Plugin::bundle(), provided a root path is given to that method.
      *
-     * @param string $root The root of this Plugin, normally also the project's root.
+     * @param string $root The root of this Plugin.
      * @throws Exceptions\RequiredDirectoryNotFoundException
      * @throws Exceptions\RequiredFileNotFoundException
      */
@@ -82,13 +81,14 @@ final class Plugin
 
     // =================================================================================================================
     // PATHS
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
     /**
      * @var string The root path of this Plugin.
      */
     private static $_rootPath = "";
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * @return string Returns the absolute ROOT path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
@@ -98,156 +98,222 @@ final class Plugin
         // IF the plugin is not initialized, THEN throw an Exception!
         if(self::$_rootPath === "")
             throw new Exceptions\PluginNotInitializedException(
-                "The plugin must be initialized using 'Plugin::initialize()' before calling any other methods!");
+                "The plugin must be initialized using 'Plugin::initialize()' before calling any other methods!\n");
 
-        // Finally, return the root path!
+        // Finally, return the ROOT path!
         return self::$_rootPath;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * @return string Returns the absolute SOURCE path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function getSourcePath(): string
     {
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
         $root = self::getRootPath();
 
+        // IF the directory does not exist, THEN create it...
         if(!file_exists("$root/src/"))
             mkdir("$root/src/");
 
+        // Finally, return the SOURCE path!
         return realpath("$root/src/");
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * @return string Returns the absolute DATA path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function getDataPath(): string
     {
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
         $root = self::getRootPath();
 
+        // IF the directory does not exist, THEN create it...
         if(!file_exists("$root/data/"))
             mkdir("$root/data/");
 
+        // Finally, return the DATA path!
         return realpath("$root/data/");
     }
 
-
+    // -----------------------------------------------------------------------------------------------------------------
+    /**
+     * Scans the directory and builds an array of all directories and files (recursively).
+     *
+     * @param string $directory The directory (or file) with which to start scanning.
+     * @return array Returns an array of absolute directories and files found.
+     */
     private static function scandirRecursive(string $directory): array
     {
+        // Initialize an empty array of results.
         $results = [];
 
+        // IF the provided directory does not exist, THEN return an empty array!
+        if(!file_exists($directory))
+            return $results;
+
+        // IF the provided directory is actually a file, THEN return an array with only this single file!
+        if(!is_dir($directory))
+        {
+            $results[] = $directory;
+            return $results;
+        }
+
+        // Loop over each item in the specified directory...
         foreach(scandir($directory) as $filename)
         {
+            // IF the current item is one of the specials "." or "..", THEN simply skip this item!
             if ($filename[0] === "." || $filename[0] === "..")
                 continue;
 
+            // OTHERWISE, build the absolute path to the current item.
             $filePath = $directory . DIRECTORY_SEPARATOR . $filename;
 
+            // IF the current item is a directory...
             if (is_dir($filePath))
             {
+                // THEN, add this directory to the results.
                 $results[] = $filename;
 
+                // AND loop through the this directory (recursively)...
                 foreach (self::scandirRecursive($filePath) as $childFilename)
                 {
+                    // Adding each set of recursive results to the top-level results.
                     $results[] = $filename . DIRECTORY_SEPARATOR . $childFilename;
                 }
             }
             else
             {
+                // OTHERWISE, simply add this file to the results.
                 $results[] = $filename;
             }
         }
 
+        // Finally, return the array of results that were found!
         return $results;
     }
 
-
+    // -----------------------------------------------------------------------------------------------------------------
+    /**
+     * Fixes all directory and file permissions for this plugin, recursively from the ROOT path.
+     *
+     * @param string $user The username in which to set ownership of all directories and files, default "nginx".
+     * @return array Returns an array of all directories and files that had their ownership or permissions changed.
+     * @throws Exceptions\PluginNotInitializedException
+     */
     public static function fixPermissions(string $user = "nginx"): array
     {
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
         $root = self::getRootPath();
 
+        // Get the user's uid and gid from the POSIX.
         /** @noinspection PhpComposerExtensionStubsInspection - As this extension is NOT Available for Windows! */
         $owner = posix_getpwnam($user);
         $ownerId = $owner["uid"];
         $groupId = $owner["gid"];
 
-        $fixed = [];
+        // Initialize an empty array of modified items.
+        $modified = [];
 
+        // Loop through all directories and files found using a recursive scan...
         foreach(self::scandirRecursive($root) as $filename)
         {
-            $file = $root."/".$filename;
+            // Set the current item's absolute path.
+            $path = $root . DIRECTORY_SEPARATOR . $filename;
 
-            $currentOwner = fileowner($file);
-            $currentGroup = filegroup($file);
+            // Get the current item's owner and group.
+            $currentOwner = fileowner($path);
+            $currentGroup = filegroup($path);
 
-            $currentPerms = intval(substr(sprintf('%o', fileperms($file)), -4), 8);
-            $permissions = is_dir($file) ? 0775 : 0664;
+            // Convert the current permissions to their octal representation for later comparison.
+            $currentPerms = intval(substr(sprintf('%o', fileperms($path)), -4), 8);
 
+            // Prepare the access permissions, based on whether or not the current item is a directory or file.
+            $permissions = is_dir($path) ? 0775 : 0664;
+
+            // IF the current item's owner is not the same as the requested owner...
             if($currentOwner !== $ownerId)
             {
-                $fixed[$file]["owner"] = sprintf("%d -> %d", $currentOwner, $ownerId);
-                chown($file, $ownerId);
+                // THEN append this item to the modified items array AND change the item's owner.
+                $modified[$path]["owner"] = sprintf("%d -> %d", $currentOwner, $ownerId);
+                chown($path, $ownerId);
             }
 
+            // IF the current item's group is not the same as the requested group...
             if($currentGroup !== $groupId)
             {
-                $fixed[$file]["group"] = sprintf("%d -> %d", $currentGroup, $groupId);
-                chgrp($file, $groupId);
+                // THEN append this item to the modified items array AND change the item's group.
+                $modified[$path]["group"] = sprintf("%d -> %d", $currentGroup, $groupId);
+                chgrp($path, $groupId);
             }
 
+            // IF the current item's access permissions are not the same as the requested permissions...
             if($currentPerms !== $permissions)
             {
-                $fixed[$file]["perms"] = sprintf("%04o -> %04o", $currentPerms, $permissions);
-                chmod($file, $permissions);
+                // THEN append this item to the modified items array AND change the item's permissions.
+                $modified[$path]["perms"] = sprintf("%04o -> %04o", $currentPerms, $permissions);
+                chmod($path, $permissions);
             }
         }
 
         /*
         $text = "";
 
-        foreach($fixed as $filename => $changes)
-        {
+        foreach($modified as $filename => $changes)
             $text .= "$filename : ".json_encode($changes)."\n";
-        }
 
-        file_put_contents($root.DIRECTORY_SEPARATOR."fixed.txt", $text);
+        file_put_contents($root.DIRECTORY_SEPARATOR."fixed_permissions.txt", $text);
         */
-        return $fixed;
-    }
 
+        // Finally, return the array of modified items!
+        return $modified;
+    }
 
     // =================================================================================================================
     // STATES
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
     /**
-     * @return bool Returns true if this Plugin is pending execution, otherwise false.
+     * @return bool Returns TRUE if this Plugin is pending execution, otherwise FALSE.
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function isExecuting(): bool
     {
-        return file_exists(self::getRootPath()."/.ucrm-plugin-execution-requested");
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
+        $root = self::getRootPath();
+
+        // Return TRUE if the UCRM specified file exists!
+        return file_exists("$root/.ucrm-plugin-execution-requested");
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
-     * @return bool Returns true if this Plugin is currently executing, otherwise false.
+     * @return bool Returns TRUE if this Plugin is currently executing, otherwise FALSE.
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function isRunning(): bool
     {
-        return file_exists(self::getRootPath()."/.ucrm-plugin-running");
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
+        $root = self::getRootPath();
+
+        // Return TRUE if the UCRM specified file exists!
+        return file_exists("$root/.ucrm-plugin-running");
     }
 
     // =================================================================================================================
     // BUNDLING
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
     /**
      * @var string[]|null
      */
     private static $_ignoreCache = null;
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * Builds a lookup cache from an optional .zipignore file.
      *
@@ -308,6 +374,7 @@ final class Plugin
         return true;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * Checks an optional .zipignore file (or pre-built cache from the file) for inclusion of the specified string.
      *
@@ -325,6 +392,7 @@ final class Plugin
         return array_search($path, self::$_ignoreCache, true) !== false;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * Creates a zip archive for use when installing this Plugin.
      *
@@ -441,13 +509,14 @@ final class Plugin
 
     // =================================================================================================================
     // SETTINGS
-    // -----------------------------------------------------------------------------------------------------------------
+    // =================================================================================================================
 
     /**
      * @var string
      */
     private static $_settingsFile = "";
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * Generates a class with auto-implemented methods and then saves it to a PSR-4 compatible file.
      * @param string $namespace An optional namespace to use for the settings file, defaults to "MVQN\UCRM\Plugins".
@@ -456,19 +525,20 @@ final class Plugin
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function createSettings(string $namespace = self::DEFAULT_SETTINGS_NAMESPACE,
-                                          string $class = self::DEFAULT_SETTINGS_CLASSNAME, string $path = null): void
+        string $class = self::DEFAULT_SETTINGS_CLASSNAME, string $path = null): void
     {
         // Get the root path for this Plugin, throws an Exception if not already initialized.
         $root = self::getRootPath();
 
+        // TODO: Test the need for DIRECTORY_SEPARATOR here...
         // Generate the source path based on namespace using PSR-4 standards for composer.
         $path = ($path === null ? self::getSourcePath() : $path)."/".str_replace("\\", "/", $namespace);
 
-        // IF the path does not already exist, THEN create it!
+        // IF the path does not already exist, THEN create it, recursively (as needed)!
         if(!file_exists($path))
             mkdir($path, 0777, true);
 
-        // Cleanup the absolute path.
+        // Clean-Up the absolute path.
         $path = realpath($path);
 
         // Create the namespace.
@@ -590,6 +660,7 @@ final class Plugin
 
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
     /**
      * @param string $name The name of the constant to append to this Settings class.
      * @param mixed $value The value of the constant to append to this Settings class.
@@ -666,45 +737,85 @@ final class Plugin
         return true;
     }
 
+    // =================================================================================================================
+    // ENCRYPTION / DECRYPTION
+    // =================================================================================================================
 
-
-    public static function getCryptoKey(): ?Key
+    /**
+     * Gets the cryptographic key from the UCRM file system.
+     *
+     * @return Key
+     * @throws Exceptions\CryptoKeyNotFoundException
+     * @throws Exceptions\PluginNotInitializedException
+     * @throws \Defuse\Crypto\Exception\BadFormatException
+     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
+     */
+    public static function getCryptoKey(): Key
     {
+        // Set the path to the cryptographic key.
         $path = Plugin::getRootPath()."/../../encryption/crypto.key";
 
+        // IF the file exists at the correct location, THEN return key, OTHERWISE return null!
         if(file_exists($path))
             return Key::loadFromAsciiSafeString(file_get_contents($path));
 
-        return null;
+        throw new Exceptions\CryptoKeyNotFoundException("File not found at: '$path'!\n");
     }
 
-    public static function decrypt(string $string, Key $key = null): ?string
+    // -----------------------------------------------------------------------------------------------------------------
+    /**
+     * Decrypts a string using the provided cryptographic key.
+     *
+     * @param string $string The string to decrypt.
+     * @param Key|null $key The key to use for decryption, or automatic detection if not provided.
+     * @return string Returns the decrypted string.
+     * @throws Exceptions\CryptoKeyNotFoundException
+     * @throws Exceptions\PluginNotInitializedException
+     * @throws \Defuse\Crypto\Exception\BadFormatException
+     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
+     * @throws \Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException
+     */
+    public static function decrypt(string $string, Key $key = null): string
     {
+        // Set the key specified; OR if not provided, get the key from the UCRM file system.
         $key = $key ?? self::getCryptoKey();
 
-        if($key === null)
-            return null;
-
+        // Decrypt and return the string!
         return Crypto::decrypt($string, $key);
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    /**
+     * Encrypts a string using the provided cryptographic key.
+     *
+     * @param string $string The string to encrypt.
+     * @param Key|null $key The key to use for decryption, or automatic detection if not provided.
+     * @return string Returns the encrypted string.
+     * @throws Exceptions\CryptoKeyNotFoundException
+     * @throws Exceptions\PluginNotInitializedException
+     * @throws \Defuse\Crypto\Exception\BadFormatException
+     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
+     */
     public static function encrypt(string $string, Key $key = null): ?string
     {
+        // Set the key specified; OR if not provided, get the key from the UCRM file system.
         $key = $key ?? self::getCryptoKey();
 
-        if($key === null)
-            return null;
-
+        // Encrypt and return the string!
         return Crypto::encrypt($string, $key);
     }
 
 
 
-
+    /**
+     * @return string
+     * @throws Exceptions\PluginNotInitializedException
+     */
     public static function environment(): string
     {
         return (file_exists(self::getRootPath()."/../.env")) ? "dev" : "prod";
     }
+
 
 
 
