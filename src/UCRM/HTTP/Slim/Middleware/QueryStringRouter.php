@@ -71,7 +71,7 @@ class QueryStringRouter
     }
 
 
-    public static function extractRouteFromQueryString(string &$queryString): string
+    public static function extractRouteFromQueryString(string &$queryString, string $defaultRoute = "/index.php"): string
     {
         //echo "$queryString\n";
         $queryString = str_replace("%2F", "/", $queryString);
@@ -90,7 +90,7 @@ class QueryStringRouter
         }
 
         if ($route === "/")
-            $route = "/index.php";
+            $route = $defaultRoute; // "/index.php";
 
         $queryString = implode("&", $query);
 
@@ -99,7 +99,7 @@ class QueryStringRouter
 
     private $defaultRoute;
 
-    public function __construct(string $defaultRoute = "/")
+    public function __construct(string $defaultRoute = "/index.php")
     {
         $this->defaultRoute = $defaultRoute;
     }
@@ -124,7 +124,7 @@ class QueryStringRouter
         echo "</pre>";
         */
 
-        $route = $this->extractRouteFromQueryString($queryString);
+        $route = $this->extractRouteFromQueryString($queryString, $this->defaultRoute);
 
         parse_str($queryString, $query);
 
