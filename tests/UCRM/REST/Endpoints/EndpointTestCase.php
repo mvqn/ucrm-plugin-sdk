@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 namespace UCRM\REST\Endpoints;
-
 #require_once __DIR__."/../../../../vendor/autoload.php";
 
 use MVQN\Annotations\AnnotationReader;
