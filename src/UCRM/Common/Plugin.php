@@ -389,7 +389,18 @@ final class Plugin
         if (!self::$_ignoreCache)
             self::buildIgnoreCache($ignore);
 
-        return array_search($path, self::$_ignoreCache, true) !== false;
+        // Identical match!
+        if (array_search($path, self::$_ignoreCache, true) !== false)
+            return true;
+
+        // Partial match (at begining only)!
+        foreach (self::$_ignoreCache as $cacheItem)
+        {
+            if (strpos($path, $cacheItem) === 0)
+                return true;
+        }
+
+        return false;
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -758,6 +769,10 @@ final class Plugin
         // IF the file exists at the correct location, THEN return key, OTHERWISE return null!
         if(file_exists($path))
             return Key::loadFromAsciiSafeString(file_get_contents($path));
+
+        // Handle DEV environment!
+        if(getenv("CRYPTO_KEY") !== false)
+            return Key::loadFromAsciiSafeString(getenv("CRYPTO_KEY"));
 
         throw new Exceptions\CryptoKeyNotFoundException("File not found at: '$path'!\n");
     }
