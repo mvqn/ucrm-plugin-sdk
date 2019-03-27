@@ -20,7 +20,7 @@ class EndpointTestCase extends \PHPUnit\Framework\TestCase
     /** @var string Location of the .env file for development. */
     const DOTENV_PATH = __DIR__ . "/../../../../";
 
-    protected function setUp()
+    protected function setUp(): void
     {
         // Load ENV variables from a file during development.
         if(file_exists(self::DOTENV_PATH.".env"))
