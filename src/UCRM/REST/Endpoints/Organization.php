@@ -28,6 +28,7 @@ use UCRM\REST\Endpoints\Helpers\OrganizationHelper;
  * @method string|null getCity()
  * @method int|null getCountryId()
  * @method int|null getStateId()
+ * @method int|null getCurrencyId()
  * @method string|null getZipCode()
  * @method bool|null getSelected()
  *
@@ -94,6 +95,11 @@ final class Organization extends EndpointObject
      * @var int
      */
     protected $stateId;
+
+    /**
+     * @var int
+     */
+    protected $currencyId;
 
     /**
      * @var string
