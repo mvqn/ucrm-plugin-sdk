@@ -3,29 +3,34 @@ declare(strict_types=1);
 
 namespace UCRM\Sessions;
 
+use Exception;
+
 use MVQN\REST\RestClient;
 use UCRM\Common\Config;
-use UCRM\Sessions\SessionUser;
-use UCRM\Sessions\SessionUser;
 
-
+/**
+ * Class Session
+ *
+ * @package UCRM\Sessions
+ * @author Ryan Spaeth <rspaeth@mvqn.net>
+ */
 class Session
 {
-    private static $_curl;
 
+    /**
+     * @return SessionUser|null
+     * @throws Exception
+     */
     public static function getCurrentUser(): ?SessionUser
     {
+        // IF the PHPSESSID cookie is not currently set, THEN no user is currently logged in, so return NULL!
         if(!isset($_COOKIE["PHPSESSID"]))
             return null;
 
-        $sessionId = $_COOKIE["PHPSESSID"];
-        $cookie = "PHPSESSID=" . preg_replace('~[^a-zA-Z0-9]~', '', $_COOKIE['PHPSESSID']);
-
-
-
-        //$host = Config::getServerFQDN();
+        // In the case of /current-user, ALWAYS use localhost for security!
         $host = "localhost";
 
+        // Check to determine which scheme and port to use for the lookup...
         switch(Config::getServerPort())
         {
             case 80:
@@ -37,68 +42,36 @@ class Session
                 $port = "";
                 break;
             default:
-                $protocol = "http";
-                $port = ":".Config::getServerPort();
+                $protocol = "http"; // TODO: Check to determine whether we can get HTTP/HTTPS from the database also!
+                $port = ":".Config::getServerPort(); // Non-standard port is being used here!
                 break;
         }
 
+        // Combine the pieces to make up the request URL.
         $url = "$protocol://$host$port";
 
-        //$url ="https://ucrm.dev.mvqn.net";
-
-
+        // Generate the necessary headers, passing along the PHP Session ID.
         $headers = [
             "Content-Type: application/json",
             "Cookie: PHPSESSID=" . preg_replace('~[^a-zA-Z0-9]~', "", $_COOKIE["PHPSESSID"] ?? ""),
         ];
 
-        /*
-        // Create a cURL session.
-        self::$_curl = curl_init();
-
-
-        // Set the options necessary for communicating with the UCRM Server.
-        curl_setopt(self::$_curl, CURLOPT_URL, "https://ucrm.dev.mvqn.net/current-user");
-        curl_setopt(self::$_curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt(self::$_curl, CURLOPT_HEADER, false);
-        curl_setopt(self::$_curl, CURLOPT_HTTPHEADER, [ "Cookie: PHPSESSID=f68eaede6caa83b9ba9661cf108b3b43" ]);
-        curl_setopt(self::$_curl, CURLOPT_TIMEOUT, 1);
-
-        //curl_setopt($curl, CURLOPT_FORBID_REUSE, true);
-
-        curl_setopt(self::$_curl, CURLOPT_SSL_VERIFYHOST, 2);
-        curl_setopt(self::$_curl, CURLOPT_SSL_VERIFYPEER, 1);
-
-        // Downloaded from: https://curl.haxx.se/docs/caextract.html
-        curl_setopt(self::$_curl, CURLOPT_CAINFO, __DIR__ . "/../../../../rest/src/MVQN/REST/Certificates/cacert-2018-10-17.pem");
-        curl_setopt(self::$_curl, CURLOPT_CAPATH, __DIR__ . "/../../../../rest/src/MVQN/REST/Certificates/cacert-2018-10-17.pem");
-
-        $response = curl_exec(self::$_curl);
-
-        echo curl_error(self::$_curl);
-        echo "*".$response."*";
-        curl_close(self::$_curl);
-
-        echo "FINISHED";
-
-
-        exit();
-        */
-
-
-
-
+        // Store the current cURL client's base URL and headers, to restore when complete.
         $oldUrl = RestClient::getBaseUrl();
         $oldHeaders = RestClient::getHeaders();
 
+        // Set the current cURL client's base URL and headers for immediate use.
         RestClient::setBaseUrl($url);
         RestClient::setHeaders($headers);
 
+        // Make a request to the UCRM server to get the currently logged in user.
         $results = RestClient::get("/current-user");
 
+        // Restore the old cURL client's base URL and headers.
         RestClient::setBaseUrl($oldUrl);
         RestClient::setHeaders($oldHeaders);
 
+        // Return either NULL or a SessionUser object parsed from the resulting data!
         return $results !== null ? new SessionUser($results) : null;
     }
 

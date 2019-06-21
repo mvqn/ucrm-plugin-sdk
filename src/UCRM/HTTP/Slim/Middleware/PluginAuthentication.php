@@ -59,9 +59,6 @@ class PluginAuthentication
      */
     public function __invoke(Request $request, Response $response, callable $next): Response
     {
-        // Get the currently authenticated User, while also capturing the actual '/current-user' response!
-        $user = Session::getCurrentUser();
-
         // IF this Plugin is in development mode, THEN skip this Middleware!
         if(Plugin::environment() === "dev")
             return $next($request, $response);
@@ -69,6 +66,9 @@ class PluginAuthentication
         // IF a Session is not already started, THEN start one!
         if (session_status() === PHP_SESSION_NONE)
             session_start();
+
+        // Get the currently authenticated User, while also capturing the actual '/current-user' response!
+        $user = Session::getCurrentUser();
 
         // Display an error if no user is authenticated!
         if(!$user)
