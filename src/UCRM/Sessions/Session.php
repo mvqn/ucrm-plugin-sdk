@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace UCRM\Sessions;
 
-use Exception;
-
 use MVQN\REST\RestClient;
 use UCRM\Common\Config;
+use UCRM\Sessions\SessionUser;
 
 /**
  * Class Session
@@ -18,14 +17,19 @@ class Session
 {
 
     /**
-     * @return SessionUser|null
-     * @throws Exception
+     * @return \UCRM\Sessions\SessionUser|null
+     * @throws \Exception
      */
-    public static function getCurrentUser(): ?SessionUser
+    public static function getCurrentUser(): ?\UCRM\Sessions\SessionUser
     {
         // IF the PHPSESSID cookie is not currently set, THEN no user is currently logged in, so return NULL!
         if(!isset($_COOKIE["PHPSESSID"]))
             return null;
+
+        // TODO: Add the cookies for "nms-crm-php-session-id" and "nms-session" to account for the new UNMS+UCRM system!
+
+        // TODO: Also handle the modified URL of "/crm/current-user" in the case of UNMS+UCRM!
+
 
         // In the case of /current-user, ALWAYS use localhost for security!
         $host = "localhost";
