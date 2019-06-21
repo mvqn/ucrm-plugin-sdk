@@ -41,11 +41,9 @@ class PluginAuthentication
      * @param Container $container
      * @param array $allowedUserGroups
      */
-    public function __construct(Container $container, callable $verification = null  /* array $allowedUserGroups = self::DEFAULT_ALLOWED_USER_GROUPS */)
+    public function __construct(Container $container, callable $verification = null)
     {
         $this->container = $container;
-        //$this->allowedUserGroups = $allowedUserGroups;
-        //$this->allowed = $verification !== null ? $verification() : true;
         $this->verification = $verification;
     }
 
@@ -61,6 +59,9 @@ class PluginAuthentication
      */
     public function __invoke(Request $request, Response $response, callable $next): Response
     {
+        // Get the currently authenticated User, while also capturing the actual '/current-user' response!
+        $user = Session::getCurrentUser();
+
         // IF this Plugin is in development mode, THEN skip this Middleware!
         if(Plugin::environment() === "dev")
             return $next($request, $response);
@@ -69,16 +70,9 @@ class PluginAuthentication
         if (session_status() === PHP_SESSION_NONE)
             session_start();
 
-        // Get the currently authenticated User, while also capturing the actual '/current-user' response!
-        $user = Session::getCurrentUser();
-
         // Display an error if no user is authenticated!
         if(!$user)
             Log::http("No User is currently Authenticated!", 401);
-
-        // Display an error if the authenticated user is NOT part of a valid User Group!
-        //if(!in_array($user->getUserGroup(), $this->allowedUserGroups))
-        //if(!$this->allowed)
 
         if($this->verification !== null && is_callable($this->verification) && !($this->verification)($user))
         {
@@ -86,7 +80,6 @@ class PluginAuthentication
             http_response_code(401);
             exit();
         }
-
 
         // Set the current session user on the container, for later use in the application.
         $this->container["sessionUser"] = $user;
