@@ -525,16 +525,16 @@
         },
         {
             "name": "mvqn/rest",
-            "version": "1.4.3",
+            "version": "1.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/rest.git",
-                "reference": "643e8f48332c89bc011127420b23886d4cf7adda"
+                "reference": "60c005fd5f682b16b3ae43401d4d5cc205557e48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/rest/zipball/643e8f48332c89bc011127420b23886d4cf7adda",
-                "reference": "643e8f48332c89bc011127420b23886d4cf7adda",
+                "url": "https://api.github.com/repos/mvqn/rest/zipball/60c005fd5f682b16b3ae43401d4d5cc205557e48",
+                "reference": "60c005fd5f682b16b3ae43401d4d5cc205557e48",
                 "shasum": ""
             },
             "require": {
@@ -568,7 +568,7 @@
                 }
             ],
             "description": "A simple REST Client library for interfacing with generic REST Endpoints.",
-            "time": "2019-06-21T07:37:30+00:00"
+            "time": "2019-06-21T08:01:03+00:00"
         },
         {
             "name": "myclabs/deep-copy",
