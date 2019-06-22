@@ -603,12 +603,12 @@ final class Plugin
 
             // Set each value from the file as a constant, as these should NEVER change after the Plugin is installed...
 
-            $_class->addConstant("UCRM_PUBLIC_URL", $ucrm["ucrmPublicUrl"])
+            $_class->addConstant("UCRM_PUBLIC_URL", rtrim($ucrm["ucrmPublicUrl"], "/"))
                 ->setVisibility("public")
                 ->addComment("@const string The publicly accessible URL of this UCRM, null if not configured in UCRM.");
 
             if(array_key_exists("ucrmLocalUrl", $ucrm))
-                $_class->addConstant("UCRM_LOCAL_URL", $ucrm["ucrmLocalUrl"])
+                $_class->addConstant("UCRM_LOCAL_URL", rtrim($ucrm["ucrmLocalUrl"], "/"))
                     ->setVisibility("public")
                     ->addComment("@const string The locally accessible URL of this UCRM, null if not configured in UCRM.");
 
