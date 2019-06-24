@@ -147,7 +147,8 @@ final class Config extends AutoObject
 
         // SMTP PASSWORD
         $option = $options->where("code", "MAILER_PASSWORD")->first();
-        self::$smtpPassword = $option->getValue() !== "" ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
+        if($option->getValue() !== null)
+            self::$smtpPassword = $option->getValue() !== "" ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
 
         if (self::$smtpPassword === null || self::$smtpPassword === "")
             Log::error("SMTP Password could not be determined by UCRM Settings!", \Exception::class);
@@ -198,7 +199,8 @@ final class Config extends AutoObject
         self::$serverPort = (int)$option->getValue();
 
         $properties = get_class_vars(Config::class);
-        $properties["smtpPassword"] = str_repeat("*", strlen($properties["smtpPassword"]));
+        if($properties["smtpPassword"] !== null)
+            $properties["smtpPassword"] = str_repeat("*", strlen($properties["smtpPassword"]));
 
         if(class_exists("\\UCRM\\Plugins\\Settings") && call_user_func("\\UCRM\\Plugins\\Settings::getVerboseLogging"))
             Log::info("CONFIGURATION: ".json_encode($properties, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));

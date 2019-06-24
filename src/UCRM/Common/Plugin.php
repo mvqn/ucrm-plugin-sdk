@@ -603,14 +603,23 @@ final class Plugin
 
             // Set each value from the file as a constant, as these should NEVER change after the Plugin is installed...
 
-            $_class->addConstant("UCRM_PUBLIC_URL", rtrim($ucrm["ucrmPublicUrl"], "/"))
-                ->setVisibility("public")
-                ->addComment("@const string The publicly accessible URL of this UCRM, null if not configured in UCRM.");
-
-            if(array_key_exists("ucrmLocalUrl", $ucrm))
-                $_class->addConstant("UCRM_LOCAL_URL", rtrim($ucrm["ucrmLocalUrl"], "/"))
+            if(array_key_exists("ucrmPublicUrl", $ucrm))
+                $_class
+                    ->addConstant("UCRM_PUBLIC_URL", $ucrm["ucrmPublicUrl"] !== null ?
+                        rtrim($ucrm["ucrmPublicUrl"], "/") :
+                        null
+                    )
                     ->setVisibility("public")
-                    ->addComment("@const string The locally accessible URL of this UCRM, null if not configured in UCRM.");
+                    ->addComment("@const string|null The publicly accessible URL of this UCRM, null if not configured in UCRM.");
+
+            if(array_key_exists("ucrmLocalUrl", $ucrm) && $ucrm["ucrmLocalUrl"] !== null)
+                $_class
+                    ->addConstant("UCRM_LOCAL_URL", $ucrm["ucrmLocalUrl"] !== null ?
+                        rtrim($ucrm["ucrmLocalUrl"], "/") :
+                        null
+                    )
+                    ->setVisibility("public")
+                    ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured in UCRM.");
 
             $_class->addConstant("PLUGIN_PUBLIC_URL", $ucrm["pluginPublicUrl"])
                 ->setVisibility("public")
