@@ -26,9 +26,30 @@ final class Plugin
     // The default namespace for the Settings singleton.
     private const DEFAULT_SETTINGS_NAMESPACE = "Plugin";
 
+
+    public const MODULE_REST = "rest";
+    public const MODULE_DATA = "data";
+    public const MODULE_HTTP = "http";
+    public const MODULE_SMTP = "smtp";
+
+    private const DEFAULT_OPTIONS = [
+        "modules" => [
+            // None required by default?
+        ]
+    ];
+
+
+
+
+
+
+
     // =================================================================================================================
     // INITIALIZATION
     // =================================================================================================================
+
+    private static $_options = self::DEFAULT_OPTIONS;
+
 
     /**
      * Initializes the Plugin singleton. This method should ALWAYS be called before any other method here, with the
@@ -38,8 +59,12 @@ final class Plugin
      * @throws Exceptions\RequiredDirectoryNotFoundException
      * @throws Exceptions\RequiredFileNotFoundException
      */
-    public static function initialize(string $root)
+    public static function initialize( string $root, array $options = null )
     {
+        if($options !== null)
+            self::$_options = array_merge(self::$_options, $options);
+
+
         $root = realpath($root);
 
         // Fail if the root path does not exist!
@@ -603,14 +628,42 @@ final class Plugin
 
             // Set each value from the file as a constant, as these should NEVER change after the Plugin is installed...
 
-            if(array_key_exists("ucrmPublicUrl", $ucrm))
-                $_class
-                    ->addConstant("UCRM_PUBLIC_URL", $ucrm["ucrmPublicUrl"] !== null ?
-                        rtrim($ucrm["ucrmPublicUrl"], "/") :
-                        null
-                    )
-                    ->setVisibility("public")
-                    ->addComment("@const string|null The publicly accessible URL of this UCRM, null if not configured in UCRM.");
+            /*
+            if(in_array(self::MODULE_HTTP, self::$_options["modules"]) &&
+                (!array_key_exists("ucrmPublicUrl", $ucrm) || $ucrm["ucrmPublicUrl"] === null))
+            {
+                echo "
+                    <p>This plugin's public URL could not be determined and is required to function properly!</p>
+                    <p>Some things to check:</p>
+                    <ul>
+                        <li>
+                            <a href='/system/settings/application' target='_parent'>Server domain name</a> has not been set?
+                        </li>
+                    </ul>
+                ";
+
+                exit();
+            }
+            */
+
+
+
+
+            if($ucrm["ucrmPublicUrl"] === null)
+            {
+                $externalContent = file_get_contents('http://checkip.dyndns.com/');
+                preg_match('/Current IP Address: \[?([:.0-9a-fA-F]+)\]?/', $externalContent, $m);
+                $externalIp = $m[1];
+
+                // Assume HTTP, as without a FQDN set in UCRM, there cannot be a valid certificate!
+                $ucrm["ucrmPublicUrl"] = "http://$externalIp/";
+            }
+
+            $_class
+                ->addConstant("UCRM_PUBLIC_URL", rtrim($ucrm["ucrmPublicUrl"], "/"))
+                ->setVisibility("public")
+                ->addComment("@const string The publicly accessible URL of this UCRM, null if not configured in UCRM.");
+
 
             if(array_key_exists("ucrmLocalUrl", $ucrm) && $ucrm["ucrmLocalUrl"] !== null)
                 $_class
@@ -620,6 +673,10 @@ final class Plugin
                     )
                     ->setVisibility("public")
                     ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured in UCRM.");
+
+            if($ucrm["pluginPublicUrl"] === null && file_exists($root."/public.php"))
+                $ucrm["pluginPublicUrl"] =
+                    "{$ucrm['ucrmPublicUrl']}_plugins/{$manifest['information']['name']}/public.php";
 
             $_class->addConstant("PLUGIN_PUBLIC_URL", $ucrm["pluginPublicUrl"])
                 ->setVisibility("public")
