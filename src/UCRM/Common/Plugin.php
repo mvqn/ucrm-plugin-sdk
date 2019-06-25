@@ -1,11 +1,20 @@
 <?php
+/** @noinspection PhpUnused */
 declare(strict_types=1);
 
 namespace UCRM\Common;
 
 use Defuse\Crypto\Crypto;
+use Defuse\Crypto\Exception\BadFormatException;
+use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
+use Exception;
 use Nette\PhpGenerator\PhpNamespace;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use Symfony\Component\Yaml\Yaml;
+use ZipArchive;
 
 /**
  * Class Plugin
@@ -39,7 +48,15 @@ final class Plugin
     ];
 
 
+    public static function getModules(): array
+    {
+        return array_key_exists("modules", self::$_options) ? self::$_options["modules"] : [];
+    }
 
+    public static function hasModule(string $name): bool
+    {
+        return array_key_exists("modules", self::$_options) ? in_array($name, self::$_options["modules"]) : false;
+    }
 
 
 
@@ -56,6 +73,8 @@ final class Plugin
      * exception of Plugin::bundle(), provided a root path is given to that method.
      *
      * @param string $root The root of this Plugin.
+     * @param array|null $options
+     *
      * @throws Exceptions\RequiredDirectoryNotFoundException
      * @throws Exceptions\RequiredFileNotFoundException
      */
@@ -418,7 +437,7 @@ final class Plugin
         if (array_search($path, self::$_ignoreCache, true) !== false)
             return true;
 
-        // Partial match (at begining only)!
+        // Partial match (at beginning only)!
         foreach (self::$_ignoreCache as $cacheItem)
         {
             if (strpos($path, $cacheItem) === 0)
@@ -469,8 +488,8 @@ final class Plugin
         echo "$archive_path => $archive_name.zip\n";
 
         // Instantiate a recursive directory iterator set to parse the files.
-        $directory = new \RecursiveDirectoryIterator($archive_path);
-        $file_info = new \RecursiveIteratorIterator($directory);
+        $directory = new RecursiveDirectoryIterator($archive_path);
+        $file_info = new RecursiveIteratorIterator($directory);
 
         // Create an empty collection of files to store the final set.
         $files = [];
@@ -511,10 +530,10 @@ final class Plugin
             unlink($file_name);
 
         // Create a new archive.
-        $zip = new \ZipArchive();
+        $zip = new ZipArchive();
 
         // IF the archive could not be created, THEN fail here!
-        if ($zip->open($file_name, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true)
+        if ($zip->open($file_name, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true)
             die("Unable to create the new archive: '$file_name'!");
 
         // Save the current working directory and move to the root path for the next steps!
@@ -553,10 +572,14 @@ final class Plugin
     private static $_settingsFile = "";
 
     // -----------------------------------------------------------------------------------------------------------------
+
     /**
      * Generates a class with auto-implemented methods and then saves it to a PSR-4 compatible file.
+     *
      * @param string $namespace An optional namespace to use for the settings file, defaults to "MVQN\UCRM\Plugins".
      * @param string $class An optional class name to use for the settings file, defaults to "Settings".
+     * @param string|null $path
+     *
      * @throws Exceptions\ManifestElementException
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -592,6 +615,8 @@ final class Plugin
             ->setExtends(SettingsBase::class)
             ->addComment("@author Ryan Spaeth <rspaeth@mvqn.net>\n");
 
+        //Log::write("[SETTINGS] AUTO GENERATION -------------");
+
         // Set any desired constants to be included in the Settings file by default...
 
         $_class->addConstant("PROJECT_NAME", basename(realpath(Plugin::getRootPath()."/../")))
@@ -626,37 +651,42 @@ final class Plugin
             // THEN, load the values from the file.
             $ucrm = json_decode(file_get_contents($root."/ucrm.json"), true);
 
-            // Set each value from the file as a constant, as these should NEVER change after the Plugin is installed...
-
-            /*
-            if(in_array(self::MODULE_HTTP, self::$_options["modules"]) &&
-                (!array_key_exists("ucrmPublicUrl", $ucrm) || $ucrm["ucrmPublicUrl"] === null))
-            {
-                echo "
-                    <p>This plugin's public URL could not be determined and is required to function properly!</p>
-                    <p>Some things to check:</p>
-                    <ul>
-                        <li>
-                            <a href='/system/settings/application' target='_parent'>Server domain name</a> has not been set?
-                        </li>
-                    </ul>
-                ";
-
-                exit();
-            }
-            */
-
-
-
-
+            // IF the UCRM's public URL is not set...
             if($ucrm["ucrmPublicUrl"] === null)
             {
+                // AND the HTTP module is required...
+                if(self::hasModule(self::MODULE_HTTP))
+                {
+                    // THEN display the requirement and exit!
+                    echo "
+                        <p>This UCRM's public URL could not be determined and is required to function properly!</p>
+                        <p>Some things to check:</p>
+                        <ul>
+                            <li>
+                                <!--suppress HtmlUnknownTarget -->
+                                <a href='/system/settings/application' target='_parent'>Server domain name</a> has not been set?
+                            </li>
+                        </ul>
+                    ";
+
+                    Log::write("This plugin uses the HTTP module, which requires that the 'Server domain name' be configured in System -> Settings.", "SETTINGS");
+                    exit();
+                }
+
+                // OTHERWISE, set the UCRM's public URL to that of the public facing IP address?
+
+                /** @noinspection SpellCheckingInspection */
+                // Get the current external IP address by lookup to "checkip.dyndns.com".
                 $externalContent = file_get_contents('http://checkip.dyndns.com/');
-                preg_match('/Current IP Address: \[?([:.0-9a-fA-F]+)\]?/', $externalContent, $m);
+                preg_match('/Current IP Address: \[?([:.0-9a-fA-F]+)]?/', $externalContent, $m);
                 $externalIp = $m[1];
 
                 // Assume HTTP, as without a FQDN set in UCRM, there cannot be a valid certificate!
                 $ucrm["ucrmPublicUrl"] = "http://$externalIp/";
+
+                Log::write("This UCRM's public URL has been set dynamically to: {$ucrm['ucrmPublicUrl']}", "SETTINGS");
+
+                // TODO: Determine if we should set this in the "ucrm.json" file to cache future lookups?
             }
 
             $_class
@@ -665,27 +695,113 @@ final class Plugin
                 ->addComment("@const string The publicly accessible URL of this UCRM, null if not configured in UCRM.");
 
 
-            if(array_key_exists("ucrmLocalUrl", $ucrm) && $ucrm["ucrmLocalUrl"] !== null)
-                $_class
-                    ->addConstant("UCRM_LOCAL_URL", $ucrm["ucrmLocalUrl"] !== null ?
-                        rtrim($ucrm["ucrmLocalUrl"], "/") :
-                        null
-                    )
-                    ->setVisibility("public")
-                    ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured in UCRM.");
+            //if(array_key_exists("ucrmLocalUrl", $ucrm) && $ucrm["ucrmLocalUrl"] !== null)
+            // This entry should now ALWAYS be present now, but can be null!
+            $_class
+                ->addConstant("UCRM_LOCAL_URL", $ucrm["ucrmLocalUrl"] !== null ?
+                    rtrim($ucrm["ucrmLocalUrl"], "/") :
+                    null
+                )
+                ->setVisibility("public")
+                ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured in UCRM.");
 
+            // IF the Plugin's public URL is not set AND there is a "public.php" file present...
             if($ucrm["pluginPublicUrl"] === null && file_exists($root."/public.php"))
+            {
+                // AND the HTTP module is required...
+                if(self::hasModule(self::MODULE_HTTP))
+                {
+                    // THEN display the requirement and exit!
+                    echo "
+                        <p>This plugin's public URL could not be determined and is required to function properly!</p>
+                        <p>Some things to check:</p>
+                        <ul>
+                            <li>
+                                <!--suppress HtmlUnknownTarget -->
+                                <a href='/system/settings/application' target='_parent'>Server domain name</a> has not been set?
+                            </li>
+                        </ul>
+                    ";
+
+                    Log::write("This plugin uses the HTTP module, which requires that the 'Server domain name' be configured in System -> Settings.", "SETTINGS");
+                    exit();
+                }
+
+                // OTHERWISE, set the Plugin's public URL dynamically?
                 $ucrm["pluginPublicUrl"] =
                     "{$ucrm['ucrmPublicUrl']}_plugins/{$manifest['information']['name']}/public.php";
+
+                Log::write("This Plugin's public URL has been set dynamically to: {$ucrm['pluginPublicUrl']}", "SETTINGS");
+            }
 
             $_class->addConstant("PLUGIN_PUBLIC_URL", $ucrm["pluginPublicUrl"])
                 ->setVisibility("public")
                 ->addComment("@const string The publicly accessible URL assigned to this Plugin by the UCRM.");
 
+            // NOTE: This should NEVER really happen!
+            // IF there is no App Key setup for this plugin...
+            if($ucrm["pluginAppKey"] === null)
+            {
+                // AND the HTTP module is required...
+                if(self::hasModule(self::MODULE_HTTP))
+                {
+                    // THEN display the requirement and exit!
+                    echo "
+                        <p>This plugin's App Key could not be determined and is required to function properly!</p>
+                    ";
+
+                    Log::write("This plugin uses the REST module, which requires that an 'App Key' was generated by the plugin installer.", "SETTINGS");
+                    exit();
+                }
+            }
+
             $_class->addConstant("PLUGIN_APP_KEY", $ucrm["pluginAppKey"])
                 ->setVisibility("public")
                 ->addComment("@const string An automatically generated UCRM API 'App Key' with read/write access.");
         }
+
+        // -------------------------------------------------------------------------------------------------------------
+        // PARAMETERS
+        // -------------------------------------------------------------------------------------------------------------
+
+        // If the 'parameters.yml' file exists...
+        if(file_exists("/usr/src/ucrm/app/config/parameters.yml"))
+        {
+            // THEN, parse the file and add the following constants to the Settings!
+            $parameters = Yaml::parseFile("/usr/src/ucrm/app/config/parameters.yml")["parameters"];
+
+            $_class->addConstant("UCRM_DB_DRIVER", $parameters["database_driver"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Driver.");
+
+            $_class->addConstant("UCRM_DB_HOST", "localhost" /*$parameters["database_host"]*/)
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Host.");
+
+            $_class->addConstant("UCRM_DB_NAME", $parameters["database_name"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Name.");
+
+            $_class->addConstant("UCRM_DB_PASSWORD", $parameters["database_password"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Password.");
+
+            $_class->addConstant("UCRM_DB_PORT", $parameters["database_port"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Port.");
+
+            $_class->addConstant("UCRM_DB_USER", $parameters["database_user"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database User.");
+
+            Log::write("Parameters successfully added from '/usr/src/ucrm/app/config/parameters.yml'.", "SETTINGS");
+        }
+
+
+
+
+
+
 
         // Load the contents of the manifest.json file.
         $data = json_decode(file_get_contents($root."/manifest.json"), true);
@@ -735,6 +851,8 @@ final class Plugin
         // Save the code to the file location.
         file_put_contents(self::$_settingsFile, $code);
 
+        //Log::write("[SETTINGS] ------------- AUTO GENERATION");
+
     }
 
     // -----------------------------------------------------------------------------------------------------------------
@@ -743,7 +861,7 @@ final class Plugin
      * @param mixed $value The value of the constant to append to this Settings class.
      * @param string $comment An optional comment for this constant.
      * @return bool Returns TRUE if the constant was successfully appended, otherwise FALSE.
-     * @throws \Exception
+     * @throws Exception
      */
     public static function appendSettingsConstant(string $name, $value, string $comment = ""): bool
     {
@@ -824,8 +942,8 @@ final class Plugin
      * @return Key
      * @throws Exceptions\CryptoKeyNotFoundException
      * @throws Exceptions\PluginNotInitializedException
-     * @throws \Defuse\Crypto\Exception\BadFormatException
-     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
+     * @throws BadFormatException
+     * @throws EnvironmentIsBrokenException
      */
     public static function getCryptoKey(): Key
     {
@@ -852,9 +970,9 @@ final class Plugin
      * @return string Returns the decrypted string.
      * @throws Exceptions\CryptoKeyNotFoundException
      * @throws Exceptions\PluginNotInitializedException
-     * @throws \Defuse\Crypto\Exception\BadFormatException
-     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
-     * @throws \Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException
+     * @throws BadFormatException
+     * @throws EnvironmentIsBrokenException
+     * @throws WrongKeyOrModifiedCiphertextException
      */
     public static function decrypt(string $string, Key $key = null): string
     {
@@ -874,8 +992,8 @@ final class Plugin
      * @return string Returns the encrypted string.
      * @throws Exceptions\CryptoKeyNotFoundException
      * @throws Exceptions\PluginNotInitializedException
-     * @throws \Defuse\Crypto\Exception\BadFormatException
-     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
+     * @throws BadFormatException
+     * @throws EnvironmentIsBrokenException
      */
     public static function encrypt(string $string, Key $key = null): ?string
     {

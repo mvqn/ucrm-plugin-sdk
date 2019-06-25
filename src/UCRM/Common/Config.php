@@ -3,9 +3,17 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use Defuse\Crypto\Exception\BadFormatException;
+use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
+use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
+use Defuse\Crypto\Key;
+use Dotenv\Dotenv;
+use MVQN\Data\Exceptions\DatabaseConnectionException;
+use MVQN\Data\Exceptions\ModelClassException;
 use MVQN\Dynamics\AutoObject;
 
 use MVQN\Data\Database;
+use ReflectionException;
 use UCRM\Data\Models\Option;
 
 /**
@@ -81,12 +89,14 @@ final class Config extends AutoObject
      * Executes prior to the very fist static __call() method and used to initialize the properties of this class.
      *
      * @return bool
+     * @throws Exceptions\CryptoKeyNotFoundException
      * @throws Exceptions\PluginNotInitializedException
-     * @throws \Defuse\Crypto\Exception\BadFormatException
-     * @throws \Defuse\Crypto\Exception\EnvironmentIsBrokenException
-     * @throws \MVQN\Data\Exceptions\DatabaseConnectionException
-     * @throws \MVQN\Data\Exceptions\ModelClassException
-     * @throws \ReflectionException
+     * @throws BadFormatException
+     * @throws EnvironmentIsBrokenException
+     * @throws WrongKeyOrModifiedCiphertextException
+     * @throws DatabaseConnectionException
+     * @throws ModelClassException
+     * @throws ReflectionException
      */
     public static function __beforeFirstStaticCall(): bool
     {
@@ -100,7 +110,7 @@ final class Config extends AutoObject
 
         // IF an .env file exists, THEN initialize environment variables from the .env file!
         if (file_exists($envPath . "/.env"))
-            (new \Dotenv\Dotenv($envPath))->load();
+            (new Dotenv($envPath))->load();
 
         // =============================================================================================================
         // SETTINGS
@@ -125,7 +135,7 @@ final class Config extends AutoObject
         // Generate the Cryptographic Key used by the Crypto library from the has already created by the UCRM server.
         // NOTE: The '../../encryption/crypto.key' file will not exist in development environments and the crypto hash
         // will need to be included in an .env file for decryption to work in development!
-        $cryptoKey = Plugin::getCryptoKey() ?? \Defuse\Crypto\Key::loadFromAsciiSafeString(getenv("CRYPTO_KEY"));
+        $cryptoKey = Plugin::getCryptoKey() ?? Key::loadFromAsciiSafeString(getenv("CRYPTO_KEY"));
 
         // Get a collection of all rows of the option table from the database!
         $options = Option::select();
@@ -150,8 +160,8 @@ final class Config extends AutoObject
         if($option->getValue() !== null)
             self::$smtpPassword = $option->getValue() !== "" ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
 
-        if (self::$smtpPassword === null || self::$smtpPassword === "")
-            Log::error("SMTP Password could not be determined by UCRM Settings!", \Exception::class);
+        //if (self::$smtpPassword === null || self::$smtpPassword === "")
+        //    Log::error("SMTP Password could not be determined by UCRM Settings!", \Exception::class);
 
         // SMTP HOST
         $option = $options->where("code", "MAILER_HOST")->first();
@@ -177,6 +187,34 @@ final class Config extends AutoObject
         // SMTP SENDER ADDRESS
         $option = $options->where("code", "MAILER_SENDER_ADDRESS")->first();
         self::$smtpSenderEmail = $option->getValue();
+
+        if(Plugin::hasModule(Plugin::MODULE_SMTP) && (
+                self::$smtpTransport === null ||
+                self::$smtpUsername === null ||
+                self::$smtpPassword === null ||
+                self::$smtpHost === null ||
+                self::$smtpPort === null ||
+                self::$smtpEncryption === null ||
+                self::$smtpAuthentication === null ||
+                self::$smtpVerifySslCertificate === null ||
+                self::$smtpSenderEmail === null
+            ))
+        {
+            // THEN display the requirement and exit!
+            echo "
+                <p>This Plugin uses the SMTP module and your UCRM SMTP Settings have not been configured!</p>
+                <p>Some things to check:</p>
+                <ul>
+                    <li>
+                        <!--suppress HtmlUnknownTarget -->
+                        <a href='/system/settings/mailer' target='_parent'>SMTP Configuration</a> has not been set?
+                    </li>
+                </ul>
+            ";
+
+            Log::write("This plugin uses the SMTP module, which requires that the 'SMTP Configuration' be completed in System -> Settings -> Mailer.", "SETTINGS");
+            exit();
+        }
 
         // GOOGLE API KEY
         $option = $options->where("code", "GOOGLE_API_KEY")->first();

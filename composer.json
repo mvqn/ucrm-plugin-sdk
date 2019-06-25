@@ -26,7 +26,8 @@
         "defuse/php-encryption": "~2.2",
 
         "phpunit/phpunit": "~8",
-        "vlucas/phpdotenv": "~2.5"
+        "vlucas/phpdotenv": "~2.5",
+        "symfony/yaml": "^4.3"
     },
     "require-dev": {
         "php": "~7.2",
