@@ -43,6 +43,6 @@
         }
     },
     "bin": [
-        "bin/upm.php"
+        "bin/upm"
     ]
 }
