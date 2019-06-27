@@ -1,5 +1,4 @@
-<?php
-/** @noinspection PhpUnused */
+<?php /** @noinspection PhpUnused */
 declare(strict_types=1);
 
 namespace UCRM\Common;
@@ -25,115 +24,308 @@ use ZipArchive;
  */
 final class Plugin
 {
-    // =================================================================================================================
-    // CONSTANTS
-    // =================================================================================================================
 
-    // The default class name for the Settings singleton.
-    private const DEFAULT_SETTINGS_CLASSNAME = "Settings";
+    #region CONSTANTS
 
-    // The default namespace for the Settings singleton.
-    private const DEFAULT_SETTINGS_NAMESPACE = "Plugin";
+    /*******************************************************************************************************************
+     * NOTES:
+     *   - By default the below will generate the settings in a file named "Settings.php" that lives in a folder named
+     *     "App" in the "src" folder of including plugin's root folder.
+     *     Example: <code>PLUGIN_ROOT/src/App/Settings.php</code>
+     *
+     *   - The PSR-4 class name will be \App\Settings
+     ******************************************************************************************************************/
 
+    /**
+     * The default namespace for the Settings singleton.
+     */
+    private const _DEFAULT_SETTINGS_NAMESPACE = "App";
 
+    /**
+     * The default class name for the Settings singleton.
+     */
+    private const _DEFAULT_SETTINGS_CLASSNAME = "Settings";
+
+    #endregion
+
+    #region MODULES
+
+    /**
+     * NOTES:
+     *   - The following are the currently supported "modules" for this Plugin SDK.
+     *
+     *   - Passing any of the following in $options["modules"] when invoking Plugin::initialize() will cause the SDK to
+     *     perform some additional checks during initialization and configuration to ensure the UCRM system the plugin
+     *     is being installed on has all of the necessary setup completed.
+     */
+
+    /**
+     * The REST module enforces the following during initialization and configuration:
+     *   - That the UCRM system has generated an "App Key" during plugin installation, which should ALWAYS be true!
+     */
     public const MODULE_REST = "rest";
+
+    /**
+     * The DATA module enforces the following during initialization and configuration:
+     *   - That the UCRM system has valid database settings, which should ALWAYS be true!
+     */
     public const MODULE_DATA = "data";
+
+    /**
+     * The HTTP module enforces the following during initialization and configuration:
+     *   - That a "Server domain name" has been configured in the UCRM's System->Settings->Application section.
+     */
     public const MODULE_HTTP = "http";
+
+    /**
+     * The SMTP module enforces the following during initialization and configuration:
+     *   - That the "SMTP Configuration" has been completed in the UCRM's System->Settings->Mailer section.
+     */
     public const MODULE_SMTP = "smtp";
 
-    private const DEFAULT_OPTIONS = [
-        "modules" => [
-            // None required by default?
-        ]
-    ];
-
-
+    /**
+     * Gets a list of all required modules for this Plugin.
+     *
+     * @return array Returns an array of the currently required modules, or empty if none have been specified.
+     */
     public static function getModules(): array
     {
         return array_key_exists("modules", self::$_options) ? self::$_options["modules"] : [];
     }
 
+    /**
+     * Checks to see if a given module is required.
+     *
+     * @param string $name The name of the module for which to check.
+     *
+     * @return bool Returns TRUE if the specified module is currently required, otherwise FALSE.
+     */
     public static function hasModule(string $name): bool
     {
         return array_key_exists("modules", self::$_options) ? in_array($name, self::$_options["modules"]) : false;
     }
+    #endregion
 
+    #region INITIALIZATION
 
-
-
-    // =================================================================================================================
-    // INITIALIZATION
-    // =================================================================================================================
-
-    private static $_options = self::DEFAULT_OPTIONS;
-
+    /*******************************************************************************************************************
+     * NOTES:
+     *   - The following are the default options, but will be overridden by options passed to Plugin::initialize().
+     *   - See individual options notes below.
+     ******************************************************************************************************************/
 
     /**
-     * Initializes the Plugin singleton. This method should ALWAYS be called before any other method here, with the
-     * exception of Plugin::bundle(), provided a root path is given to that method.
+     * @var array The Plugin's options.
+     */
+    private static $_options =
+    [
+        // A list of any required modules.
+        "modules" => [
+            // None required by default!
+        ]
+    ];
+
+    /**
+     * Initializes the Plugin singleton.
      *
-     * @param string $root The root of this Plugin.
-     * @param array|null $options
+     * This method MUST be called before any other method here, with the exception of Plugin::bundle(), provided a root
+     * path is provided to that method.
+     *
+     * @param string|null $root The "root" path of this Plugin, if NULL, this method will attempt to guess it!
+     * @param array|null $options An optional set of options for this Plugin.
      *
      * @throws Exceptions\RequiredDirectoryNotFoundException
      * @throws Exceptions\RequiredFileNotFoundException
      */
-    public static function initialize( string $root, array $options = null )
+    public static function initialize( string $root = null, array $options = null )
     {
+        // IF no "root" path has been provided...
+        if($root === null)
+        {
+            // THEN, attempt to guess it using the most recent "calling" script.
+
+            // Get the debug back-trace.
+            $trace = debug_backtrace();
+
+            // Set the "root" path the same as the directory of the top-most script.
+            $root = dirname($trace[0]["file"]);
+
+            // NOTE: Checks will be done below to determine whether this is a valid "root" path or not!
+        }
+
+        // IF any options are provided, merge them with the default options, preferring these!
         if($options !== null)
             self::$_options = array_merge(self::$_options, $options);
 
+        #region REQUIRED: /
 
+        // Get the absolute "root" path, in cases where a relative path is provided.
         $root = realpath($root);
 
-        // Fail if the root path does not exist!
-        if(!$root || !file_exists($root))
-            die("The provided root path does not exist!\n".
-                "- Provided: '$root'\n");
-
-        // Fail if the root path is not a directory!
-        if(!$root || !is_dir($root))
-            die("The provided root path is a file and should be a directory!\n".
-                "- Provided: '$root'\n");
-
-        // Fail if the data path does not exist!
-        $data = realpath($root."/data/");
-        if(!$data || !file_exists($data))
+        // IF the root path is invalid or does not exist...
+        if(!$root || !file_exists($root) || !is_dir($root))
+        {
+            // THEN throw an Exception, as we cannot do anything else without this path!
             throw new Exceptions\RequiredDirectoryNotFoundException(
-                "The provided root path '$root' does not contain a 'data' directory!\n");
+                "The provided root path does not exist!\n".
+                "- Provided: '$root'\n");
+        }
 
-        // Fail if the config file does not exist!
-        $config = realpath($root."/data/config.json");
-        if(!$config || !file_exists($config))
-            throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'data/config.json' file!\n");
+        // IF the root path is not a folder...
+        if(!$root || !is_dir($root))
+        {
+            // THEN throw an Exception, as we cannot do anything else without this path!
+            throw new Exceptions\RequiredDirectoryNotFoundException(
+                "The provided root path is a file and should be a folder!\n".
+                "- Provided: '$root'\n");
+        }
 
-        // Fail if the manifest file does not exist!
+        #endregion
+
+        #region REQUIRED: /manifest.json
+
+        // Get the absolute "manifest.json" path, relative to the "root" path.
         $manifest = realpath($root."/manifest.json");
-        if(!$manifest || !file_exists($manifest))
-            throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'manifest.json' file!\n");
 
-        // Fail if the ucrm file does not exist!
+        // IF the manifest.json path is invalid or does not exist...
+        if(!$manifest || !file_exists($manifest) || !is_file($manifest))
+        {
+            // NOTE: This is a required Plugin file, so it should ALWAYS exist!
+            // THEN throw an Exception, as we cannot do anything else without this file!
+            throw new Exceptions\RequiredFileNotFoundException(
+                "The provided root path '$root' does not contain a 'manifest.json' file!\n".
+                "- Provided: '$root/manifest.json'\n");
+        }
+
+        #endregion
+
+        #region REQUIRED: /ucrm.json
+
+        // Get the absolute "ucrm.json" path, relative to the "root" path.
         $ucrm = realpath($root."/ucrm.json");
-        if(!$ucrm || !file_exists($ucrm))
-            throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'ucrm.json' file!\n");
 
+        // IF the ucrm.json path is invalid or does not exist...
+        if(!$ucrm || !file_exists($ucrm) || !is_file($ucrm))
+        {
+            // NOTE: This is a required Plugin file, so it should ALWAYS exist!
+            // THEN throw an Exception, as we cannot do anything else without this file!
+            throw new Exceptions\RequiredFileNotFoundException(
+                "The provided root path '$root' does not contain a 'ucrm.json' file!\n".
+                "- Provided: '$root/ucrm.json'\n");
+        }
+
+        #endregion
+
+        #region REQUIRED: /data/
+
+        // Get the absolute "data" path, relative to the "root" path.
+        $data = realpath($root."/data/");
+
+        // IF the data path is invalid or does not exist...
+        if(!$data || !file_exists($data))
+        {
+            // NOTE: By performing this check after the Plugin's required files, we can now simply create this folder!
+            mkdir($data, 0775, TRUE);
+
+            /*
+            // THEN throw an Exception, as we cannot do anything else without this path!
+            throw new Exceptions\RequiredDirectoryNotFoundException(
+                "The provided root path '$root' does not contain a 'data' directory!\n".
+                "- Provided: '$root/data/'\n");
+            */
+        }
+
+        // TODO: Determine the need to handle a valid data path when a non-directory file exists?
+
+        #endregion
+
+        #region REQUIRED: /data/config.json
+
+        // Get the absolute "config.json" path, relative to the "root" path.
+        $config = realpath($root."/data/config.json");
+
+        // IF the config.json path is invalid or does not exist...
+        if(!$config || !file_exists($config) || !is_file($config))
+        {
+            // NOTE: By performing this check after the Plugin's required files, we can now simply create this file!
+            file_put_contents($config, "{}");
+
+            /*
+            // THEN throw an Exception, as we cannot do anything else without this file!
+            throw new Exceptions\RequiredFileNotFoundException(
+                "The provided root path '$root' does not contain a 'data/config.json' file!\n".
+                "- Provided: '$root/data/config.json'\n");
+            */
+        }
+
+        #endregion
+
+        #region OPTIONAL: /data/plugin.log
+
+        // Get the absolute "plugin.log" path, relative to the "root" path.
+        $log = realpath($root."/data/plugin.log");
+
+        // IF the plugin.log path is invalid or does not exist...
+        if(!$log || !file_exists($log) || !is_file($log))
+        {
+            // NOTE: By performing this check after the Plugin's required files, we can now simply create this file!
+            $entry = new LogEntry(new \DateTimeImmutable(), "INIT",
+                "This plugin.log file has been automatically generated by Plugin::initialize().");
+
+            file_put_contents($log, $entry);
+
+            /*
+            // THEN throw an Exception, as we cannot do anything else without this file!
+            throw new Exceptions\RequiredFileNotFoundException(
+                "The provided root path '$root' does not contain a 'data/plugin.log' file!\n".
+                "- Provided: '$root/data/plugin.log'\n");
+            */
+        }
+
+        #endregion
+
+        #region OPTIONAL: /src/
+
+        // Get the absolute "source" path, relative to the "root" path.
+        $src = realpath($root."/src/");
+
+        // IF the source path is invalid or does not exist...
+        if(!$src || !file_exists($src))
+        {
+            // NOTE: By performing this check after the Plugin's required files, we can now simply create this folder!
+            mkdir($src, 0775, TRUE);
+
+            /*
+            // THEN throw an Exception, as we cannot do anything else without this path!
+            throw new Exceptions\RequiredDirectoryNotFoundException(
+                "The provided root path '$root' does not contain a 'source' directory!\n".
+                "- Provided: '$root/src/'\n");
+            */
+        }
+
+        // TODO: Determine the need to handle a valid data path when a non-directory file exists?
+
+        #endregion
+
+        // All required/optional checks have passed, so this must be a valid Plugin root path!
         self::$_rootPath = $root;
+
+        // TODO: Add any further Plugin initialization code here!
+        // ...
     }
 
-    // =================================================================================================================
-    // PATHS
-    // =================================================================================================================
+    #endregion
+
+    #region PATHS
 
     /**
-     * @var string The root path of this Plugin.
+     * @var string The root path of this Plugin, as configured by Plugin::initialize();
      */
     private static $_rootPath = "";
 
-    // -----------------------------------------------------------------------------------------------------------------
     /**
+     * Gets the "root" path.
+     *
      * @return string Returns the absolute ROOT path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -142,14 +334,15 @@ final class Plugin
         // IF the plugin is not initialized, THEN throw an Exception!
         if(self::$_rootPath === "")
             throw new Exceptions\PluginNotInitializedException(
-                "The plugin must be initialized using 'Plugin::initialize()' before calling any other methods!\n");
+                "The Plugin must be initialized using 'Plugin::initialize()' before calling any other methods!\n");
 
         // Finally, return the ROOT path!
         return self::$_rootPath;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
     /**
+     * Gets the "source" path.
+     *
      * @return string Returns the absolute SOURCE path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -158,16 +351,18 @@ final class Plugin
         // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
         $root = self::getRootPath();
 
+        // NOTE: This is now handled in Plugin::initialize().
         // IF the directory does not exist, THEN create it...
-        if(!file_exists("$root/src/"))
-            mkdir("$root/src/");
+        //if(!file_exists("$root/src/"))
+        //    mkdir("$root/src/");
 
         // Finally, return the SOURCE path!
         return realpath("$root/src/");
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
     /**
+     * Gets the "data" path.
+     *
      * @return string Returns the absolute DATA path of this Plugin.
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -176,15 +371,19 @@ final class Plugin
         // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
         $root = self::getRootPath();
 
+        // NOTE: This is now handled in Plugin::initialize().
         // IF the directory does not exist, THEN create it...
-        if(!file_exists("$root/data/"))
-            mkdir("$root/data/");
+        //if(!file_exists("$root/data/"))
+        //    mkdir("$root/data/");
 
         // Finally, return the DATA path!
         return realpath("$root/data/");
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
+    #endregion
+
+    #region PERMISSIONS
+
     /**
      * Scans the directory and builds an array of all directories and files (recursively).
      *
@@ -241,7 +440,6 @@ final class Plugin
         return $results;
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
     /**
      * Fixes all directory and file permissions for this plugin, recursively from the ROOT path.
      *
@@ -317,11 +515,13 @@ final class Plugin
         return $modified;
     }
 
-    // =================================================================================================================
-    // STATES
-    // =================================================================================================================
+    #endregion
+
+    #region STATES
 
     /**
+     * Checks to determine if the Plugin is currently pending execution, via manual/scheduled execution.
+     *
      * @return bool Returns TRUE if this Plugin is pending execution, otherwise FALSE.
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -334,8 +534,11 @@ final class Plugin
         return file_exists("$root/.ucrm-plugin-execution-requested");
     }
 
-    // -----------------------------------------------------------------------------------------------------------------
+    // TODO: Upon feedback from UBNT, determine if it is possible to use something like Plugin::requestExecution()?
+
     /**
+     * Checks to determine if the Plugin is currently executing, via manual/scheduled execution.
+     *
      * @return bool Returns TRUE if this Plugin is currently executing, otherwise FALSE.
      * @throws Exceptions\PluginNotInitializedException
      */
@@ -348,9 +551,17 @@ final class Plugin
         return file_exists("$root/.ucrm-plugin-running");
     }
 
-    // =================================================================================================================
-    // BUNDLING
-    // =================================================================================================================
+    #endregion
+
+    #region BUNDLING (DEVELOPMENT ONLY)
+
+    /*******************************************************************************************************************
+     * NOTES:
+     *   - The following are used to bundle the correct folders and files into a ZIP archive that can then be used by
+     *     the UCRM systems to install/update the Plugin.
+     *   - The methods are used only in the development environment, usually via composer script.
+     *   - See individual options notes below.
+     ******************************************************************************************************************/
 
     /**
      * @var string[]|null
@@ -562,6 +773,8 @@ final class Plugin
         chdir($old_dir);
     }
 
+    #endregion
+
     // =================================================================================================================
     // SETTINGS
     // =================================================================================================================
@@ -583,8 +796,8 @@ final class Plugin
      * @throws Exceptions\ManifestElementException
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function createSettings(string $namespace = self::DEFAULT_SETTINGS_NAMESPACE,
-        string $class = self::DEFAULT_SETTINGS_CLASSNAME, string $path = null): void
+    public static function createSettings(string $namespace = self::_DEFAULT_SETTINGS_NAMESPACE,
+        string $class = self::_DEFAULT_SETTINGS_CLASSNAME, string $path = null): void
     {
         // Get the root path for this Plugin, throws an Exception if not already initialized.
         $root = self::getRootPath();
@@ -703,7 +916,17 @@ final class Plugin
                     null
                 )
                 ->setVisibility("public")
-                ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured in UCRM.");
+                ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured.");
+
+            if(array_key_exists("unmsLocalUrl", $ucrm) && $ucrm["unmsLocalUrl"] !== null)
+            // This entry should exist when run on the new UNMS system, but can be null!
+            $_class
+                ->addConstant("UNMS_LOCAL_URL", $ucrm["unmsLocalUrl"] !== null ?
+                    rtrim($ucrm["unmsLocalUrl"], "/") :
+                    null
+                )
+                ->setVisibility("public")
+                ->addComment("@const string|null The locally accessible URL of this UNMS, null if not configured.");
 
             // IF the Plugin's public URL is not set AND there is a "public.php" file present...
             if($ucrm["pluginPublicUrl"] === null && file_exists($root."/public.php"))
@@ -743,7 +966,7 @@ final class Plugin
             if($ucrm["pluginAppKey"] === null)
             {
                 // AND the HTTP module is required...
-                if(self::hasModule(self::MODULE_HTTP))
+                if(self::hasModule(self::MODULE_REST))
                 {
                     // THEN display the requirement and exit!
                     echo "
@@ -758,6 +981,10 @@ final class Plugin
             $_class->addConstant("PLUGIN_APP_KEY", $ucrm["pluginAppKey"])
                 ->setVisibility("public")
                 ->addComment("@const string An automatically generated UCRM API 'App Key' with read/write access.");
+
+            $_class->addConstant("PLUGIN_ID", $ucrm["pluginId"])
+                ->setVisibility("public")
+                ->addComment("@const string An automatically generated UCRM Plugin ID.");
         }
 
         // -------------------------------------------------------------------------------------------------------------
@@ -793,6 +1020,24 @@ final class Plugin
             $_class->addConstant("UCRM_DB_USER", $parameters["database_user"])
                 ->setVisibility("public")
                 ->addComment("@const string The UCRM Database User.");
+
+            // NOTE: This should NEVER really happen!
+            if(self::hasModule(self::MODULE_DATA) && (
+                $parameters["database_driver"] === null ||
+                $parameters["database_host"] === null ||
+                $parameters["database_name"] === null ||
+                $parameters["database_password"] === null ||
+                $parameters["database_port"] === null ||
+                $parameters["database_user"] === null
+                ))
+            {
+                echo "
+                    <p>This UCRM's database settings could not be determined and are required to function properly!</p>
+                ";
+
+                Log::write("This plugin uses the DATA module, which requires that valid database connection settings exist.", "SETTINGS");
+                exit();
+            }
 
             Log::write("Parameters successfully added from '/usr/src/ucrm/app/config/parameters.yml'.", "SETTINGS");
         }
