@@ -2,35 +2,46 @@
 <?php
 declare(strict_types=1);
 
-// Should always be "PLUGIN_ROOT/src" during development.
-$pluginPath = getcwd();
-
-require_once $pluginPath."/vendor/autoload.php";
-
-use UCRM\Common\Plugin;
-
-/**
- * composer.php
- *
- * A shared script that handles composer script execution from the command line.
- *
- * @author Ryan Spaeth <rspaeth@mvqn.net>
- */
-
 if($argc === 1)
 {
-    $usage = "\n".
+    $usage =
+        "\n".
         "Usage:\n".
-        "    composer.php [create|bundle]\n";
+        "    ./vendor/bin/upm [create|bundle]\n".
+        "\n"
+    ;
+
+    // TODO: Add additional commands to the usage docs as needed!
 
     die($usage);
 }
 
+// Should always be "PLUGIN_ROOT/src" during development, as this will be run from
+$pluginPath = realpath(__DIR__."/../../../../");
+
+/** @noinspection PhpIncludeInspection */
+require_once $pluginPath."/vendor/autoload.php";
+
+use Dotenv\Dotenv;
+use UCRM\SFTP\SftpClient;
+use UCRM\Common\Plugin;
+
+/**
+ * upm (UCRM Plugin Manager)
+ *
+ * A shared script that handles common UCRM Plugin Management tasks.
+ *
+ * @author Ryan Spaeth <rspaeth@mvqn.net>
+ */
+
+// Get the project's path up one level from our plugin path.
 $projectPath = realpath($pluginPath."/../");
-$pluginName = baseName($projectPath);
+
+// Get the plugin's name from the manifest.json file, as we do not want to unnecessarily create Settings.
+$pluginName = json_decode(file_get_contents($pluginPath."/manifest.json"), true)["information"]["name"];
 
 if(file_exists($pluginPath."/../.env"))
-    (new \Dotenv\Dotenv($pluginPath."/../"))->load();
+    (new Dotenv($pluginPath."/../"))->load();
 
 Plugin::initialize($pluginPath);
 
@@ -44,30 +55,33 @@ switch ($argv[1])
 
     // Bundle the 'zip/' directory into a package ready for Plugin installation on the UCRM server.
     case "bundle":
-        // Create the Settings, if needed!
-        if(!file_exists("$pluginPath/src/App/Settings.php"))
-            Plugin::createSettings("App", "Settings", $pluginPath."/src/");
-
-        Plugin::bundle($pluginPath, \App\Settings::PLUGIN_NAME, ".zipignore", $projectPath);
+        Plugin::bundle($pluginPath, $pluginName, ".zipignore", $projectPath);
         break;
 
-    /*
     case "sync":
-        $host = getenv("UCRM_SFTP_HOSTNAME");
-        $port = 22;
-        $user = getenv("UCRM_SFTP_USERNAME");
-        $pass = getenv("UCRM_SFTP_PASSWORD");
+        try
+        {
+            $host = getenv("SFTP_HOST");
+            $port = (int)getenv("SFTP_PORT");
+            $user = getenv("SFTP_USER");
+            $pass = getenv("SFTP_PASS");
 
-        $sftp = new \MVQN\SFTP\SftpClient($host, $port);
-        $sftp->login($user, $pass);
-        $sftp->setRemoteBasePath("/home/ucrm/data/ucrm/ucrm/data/plugins/$pluginName/");
-        $sftp->setLocalBasePath(__DIR__."/../");
+            $sftp = new SftpClient($host, $port);
+            $sftp->login($user, $pass);
+            $sftp->setRemoteBasePath("/home/ucrm/data/ucrm/ucrm/data/plugins/$pluginName/");
+            $sftp->setLocalBasePath($pluginPath);
 
-        foreach([ "/ucrm.json", "/data/config.json" ] as $file)
-            $data = $sftp->download($file);
+            foreach([ "/ucrm.json", "/data/config.json", "/data/plugin.log" ] as $file)
+                $data = $sftp->download($file);
+        }
+        catch(Exception $e)
+        {
+            echo "Unable to synchronize files/folders from remote server!\n";
+            echo $e->getMessage();
+        }
 
         break;
-    */
+
 
     // TODO: More commands to come!
 
