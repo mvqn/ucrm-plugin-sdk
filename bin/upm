@@ -58,7 +58,8 @@ switch ($argv[1])
 
     // Bundle the 'zip/' directory into a package ready for Plugin installation on the UCRM server.
     case "bundle":
-        Plugin::bundle($pluginPath, $pluginName."_".$pluginVersion, ".zipignore", $projectPath);
+        //Plugin::bundle($pluginPath, $pluginName."_".$pluginVersion, ".zipignore", $projectPath);
+        Plugin::bundle($pluginPath, $pluginName, ".zipignore", $projectPath);
         break;
 
     case "sync":
