@@ -18,7 +18,7 @@ use MVQN\Dynamics\AutoObject;
  */
 class LogEntry extends AutoObject
 {
-    protected const REGEX_TEXT = '/^\[([\w|\-]* [\w|\:|\.]*)](?: \[(\w*)\])? (.*)$/m';
+    public const REGEX_TEXT = '/^\[([\w|\-]* [\w|\:|\.]*)](?: \[(\w*)\])? (.*)$/m';
 
     /** @const string The format to be used as the timestamp. */
     public const TIMESTAMP_FORMAT_DATETIME = "Y-m-d H:i:s.u";
