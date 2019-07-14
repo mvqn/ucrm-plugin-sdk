@@ -37,6 +37,20 @@ class LogEntry extends AutoObject
     protected $timestamp;
 
     /**
+     * Gets the LogEntry's timestamp represented in the specified timezone.
+     *
+     * @param string $timezone A PHP supported timezone in the typical format "Country/Region", defaults to "UTC".
+     *
+     * @return \DateTimeImmutable Returns the local timestamp.
+     * @throws \Exception
+     */
+    public function getTimestampLocal(string $timezone = ""): \DateTimeImmutable
+    {
+        $timezone = $timezone ?: Config::getTimezone() ?: "UTC";
+        return $this->timestamp->setTimezone(new \DateTimeZone($timezone));
+    }
+
+    /**
      * @var string|null
      */
     protected $severity;
