@@ -63,9 +63,11 @@ class LogEntry extends AutoObject
     protected $text;
 
 
-    public function __construct(\DateTime $timestamp, string $severity, string $text, string $logger = Log::UCRM)
+    public function __construct(\DateTimeImmutable $timestamp, string $severity, string $text, string $logger =
+    Log::UCRM)
     {
-        $this->timestamp = new \DateTimeImmutable($timestamp->setTimezone("UTC")); // All entries should be UTC!
+        // All entries should be UTC!
+        $this->timestamp = $timestamp;
         $this->severity = $severity;
         $this->text = $text;
         $this->logger = $logger;
