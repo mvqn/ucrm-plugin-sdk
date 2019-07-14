@@ -3,7 +3,14 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Monolog\Processor\IntrospectionProcessor;
+use Monolog\Processor\WebProcessor;
 use MVQN\Collections\Collection;
+use \Exception;
+use SebastianBergmann\Diff\Line;
 
 /**
  * Class Log
@@ -74,9 +81,90 @@ final class Log
         return realpath($path) ?: $path;
     }
 
+
+
+
+
+    private const DEFAULT_TIMESTAMP_FORMAT = "Y-m-d H:i:s.uP";
+    private const DEFAULT_ROW_ENTRY_FORMAT = "[%datetime%] [%level_name%] %message% %context% %extra%\n";
+    private const CHANNEL_ROW_ENTRY_FORMAT = "[%datetime%] [%channel%.%level_name%] %message% %context% %extra%\n";
+
+    public const UCRM = "UCRM";
+    public const HTTP = "HTTP";
+    public const REST = "REST";
+    public const DATA = "DATA";
+
+    private static $_loggers = [];
+
+    private static function getLoggers(): array
+    {
+        if(self::$_loggers === [])
+        {
+            self::$_loggers = [
+                self::UCRM => self::addStandardLogger("UCRM"), // plugin.log
+                self::HTTP => self::addStandardLogger("HTTP"),
+                self::REST => self::addStandardLogger("REST"),
+                self::DATA => self::addStandardLogger("DATA"),
+            ];
+        }
+
+        return self::$_loggers;
+    }
+
+    public static function getLogger(string $name = self::UCRM): ?Logger
+    {
+        return array_key_exists($name, self::getLoggers()) ? self::$_loggers[$name] : null;
+    }
+
+
+    private static function addStandardLogger(string $name = self::UCRM): Logger
+    {
+        $logger = new Logger($name);
+
+        $resources = [
+            Plugin::getDataPath() . ($name === self::UCRM ? "/plugin.log" : "/logs/" . strtolower($name) .".log"),
+            PHP_SAPI === "cli-server" ? "php://stdout" : ""
+        ];
+
+        foreach(array_filter($resources) as $resource)
+        {
+            $formatter = ($resource === "php://stdout") ?
+                new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT) :
+                new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT);
+
+            $logger->pushHandler((new StreamHandler($resource))->setFormatter($formatter));
+        }
+
+        $logger->pushProcessor(new IntrospectionProcessor());
+        $logger->pushProcessor(new WebProcessor());
+
+        return $logger;
+    }
+
+    public static function addLogger(Logger $logger): Logger
+    {
+        if(!is_a(self::$_loggers[$context], Logger::class))
+            throw new Exception("Not a valid Logger!");
+
+        if(array_key_exists($logger->getName(), self::getLoggers()))
+            unset(self::$_loggers[$logger->getName()]);
+
+        self::$_loggers[$logger->getName()] = $logger;
+
+        return $logger;
+    }
+
+
+
+
+
     // =================================================================================================================
     // WRITING
     // -----------------------------------------------------------------------------------------------------------------
+
+
+
+
 
     /**
      * Clears the current log file.
@@ -129,7 +217,7 @@ final class Log
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function writeArray(array $array, string $severity = "",
-       int $options = self::DEFAULT_JSON_OPTIONS): LogEntry
+        int $options = self::DEFAULT_JSON_OPTIONS): LogEntry
     {
         // JSON encode the array and then write it to the current log file.
         $text = json_encode($array, $options);
@@ -160,9 +248,16 @@ final class Log
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function debug(string $message): LogEntry
+    public static function debug(string $message, string $log = self::UCRM): ?LogEntry
     {
-        return self::write($message, LogEntry::SEVERITY_DEBUG);
+        if(!($logger = self::getLogger($log)))
+            return null;
+
+        if(!($result = $logger->debug($message)))
+            return null;
+
+        // TODO: Finish deprecating the old Log::debug().
+        return null;
     }
 
     /**
@@ -172,9 +267,16 @@ final class Log
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function info(string $message): LogEntry
+    public static function info(string $message, string $log = self::UCRM): ?LogEntry
     {
-        return self::write($message, LogEntry::SEVERITY_INFO);
+        if(!($logger = self::getLogger($log)))
+            return null;
+
+        if(!($result = $logger->info($message)))
+            return null;
+
+        // TODO: Finish deprecating the old Log::info().
+        return null;
     }
 
     /**
@@ -184,9 +286,16 @@ final class Log
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function warning(string $message): LogEntry
+    public static function warning(string $message, string $log = self::UCRM): ?LogEntry
     {
-        return self::write($message, LogEntry::SEVERITY_WARNING);
+        if(!($logger = self::getLogger($log)))
+            return null;
+
+        if(!($result = $logger->warning($message)))
+            return null;
+
+        // TODO: Finish deprecating the old Log::warning().
+        return null;
     }
 
     /**
@@ -197,26 +306,40 @@ final class Log
      * @return LogEntry Returns the logged entry, when an Exception is not provided.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function error(string $message, string $exception = ""): LogEntry
+    public static function error(string $message, string $log = self::UCRM, string $exception = ""): ?LogEntry
     {
-        $entry = self::write($message, LogEntry::SEVERITY_ERROR);
+        if(!($logger = self::getLogger($log)))
+            return null;
 
+        if(!($result = $logger->warning($message)))
+            return null;
+
+        // TODO: Finish deprecating the old Log::error().
         if($exception !== "" && is_subclass_of($exception, \Exception::class, true))
             throw new $exception($message);
         else
-            return $entry;
+            return null;
     }
 
-    public static function http(string $message, int $statusCode, bool $die = true): LogEntry
+
+    // TODO: Fix this up to make it more useful!
+
+    public static function http(string $message, string $log = self::UCRM, int $statusCode = 500, bool $die = true):
+    ?LogEntry
     {
-        $entry = self::write($message, "HTTP");
+        if(!($logger = self::getLogger($log)))
+            return null;
+
+        if(!($result = $logger->alert($message)))
+            return null;
 
         http_response_code($statusCode);
 
+        // TODO: Finish deprecating the old Log::http().
         if($die)
             die($message);
         else
-            return $entry;
+            return null;
     }
 
     // =================================================================================================================

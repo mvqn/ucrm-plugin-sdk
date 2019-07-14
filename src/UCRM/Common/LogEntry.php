@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use Carbon\Carbon;
 use MVQN\Collections\Collection;
 use MVQN\Dynamics\AutoObject;
 
@@ -18,17 +19,18 @@ use MVQN\Dynamics\AutoObject;
  */
 class LogEntry extends AutoObject
 {
-    public const REGEX_TEXT = '/^\[([\w|\-]* [\w|\:|\.\+]*)](?: \[(\w*)\])? (.*)$/m';
+    protected const REGEX_TEXT = '/^\[([\w|\-]* [\w|\:|\.\+]*)](?: \[(\w*)\])? (.*)$/m';
 
     /** @const string The format to be used as the timestamp. */
     public const TIMESTAMP_FORMAT_DATETIME = "Y-m-d H:i:s.uP";
 
+    /*
     public const SEVERITY_NONE      = "";
     public const SEVERITY_INFO      = "INFO";
     public const SEVERITY_DEBUG     = "DEBUG";
     public const SEVERITY_WARNING   = "WARNING";
     public const SEVERITY_ERROR     = "ERROR";
-
+    */
 
 
     /**
@@ -61,11 +63,12 @@ class LogEntry extends AutoObject
     protected $text;
 
 
-    public function __construct(\DateTimeImmutable $timestamp, string $severity, string $text)
+    public function __construct(\DateTime $timestamp, string $severity, string $text, string $logger = Log::UCRM)
     {
-        $this->timestamp = $timestamp;
+        $this->timestamp = new \DateTimeImmutable($timestamp->setTimezone("UTC")); // All entries should be UTC!
         $this->severity = $severity;
         $this->text = $text;
+        $this->logger = $logger;
     }
 
     /**
@@ -103,8 +106,8 @@ class LogEntry extends AutoObject
 
     public function __toString()
     {
-        if($this->timestamp === null || $this->severity === null || $this->text === null)
-            return "";
+        //if($this->timestamp === null || $this->severity === null || $this->text === null)
+        //    return "";
 
         return
             "[{$this->timestamp->format(self::TIMESTAMP_FORMAT_DATETIME)}] ".
@@ -112,6 +115,7 @@ class LogEntry extends AutoObject
             str_replace("\n", "\n                             ", $this->text).
             PHP_EOL;
     }
+
 
 
 }
