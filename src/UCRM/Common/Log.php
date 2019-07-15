@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use Monolog\Handler\AbstractProcessingHandler;
 use UCRM\MonoLog\Handlers\Sqlite3Handler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -29,62 +30,6 @@ final class Log
     /** @const int The options to be used when json_encode() is called. */
     private const DEFAULT_JSON_OPTIONS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
-    /** @const string The format of timestamps to be used for file names. */
-    public const TIMESTAMP_FORMAT_DATEONLY = "Y-m-d";
-
-    // =================================================================================================================
-    // PATHS
-    // -----------------------------------------------------------------------------------------------------------------
-
-    /**
-     * Provides the path to the current log file.
-     *
-     * @return string Returns the absolute path to the 'data/plugin.log' file and creates it if missing.
-     * @throws Exceptions\PluginNotInitializedException
-     */
-    public static function logFile(): string
-    {
-        // Get the absolute path to the data folder, creating the folder as needed.
-        $path = Plugin::getDataPath()."/plugin.log";
-
-        // IF the current log file does not exist...
-        if(!file_exists($path))
-        {
-            // THEN create it and append a notification.
-            file_put_contents($path, "");
-            self::info("Log created!");
-        }
-
-        // Return the absolute path to the current log file.
-        return realpath($path) ?: $path;
-    }
-
-    /**
-     * Provides the path to the rotated logs folder, or an exact file if a date/time is provided.
-     *
-     * @param \DateTimeInterface|null $date An optional date/time for which to find a matching rotated log file.
-     * @return string Returns the absolute path to either the 'data/logs/' folder or the corresponding rotated log file.
-     * @throws Exceptions\PluginNotInitializedException
-     */
-    public static function logsPath(\DateTimeInterface $date = null): string
-    {
-        // Get the absolute path to the data folder, creating the folder as needed.
-        $path = Plugin::getDataPath()."/logs/";
-
-        // IF the logs folder does not exist, THEN create it!
-        if(!file_exists($path))
-            mkdir($path);
-
-        // IF a date/time
-        if($date !== null)
-            $path .= $date->format(self::TIMESTAMP_FORMAT_DATEONLY).".log";
-
-        return realpath($path) ?: $path;
-    }
-
-
-
-
 
     private const DEFAULT_TIMESTAMP_FORMAT = "Y-m-d H:i:s.uP";
     private const DEFAULT_ROW_ENTRY_FORMAT = "[%datetime%] [%level_name%] %message% %context% %extra%\n";
@@ -95,6 +40,40 @@ final class Log
     public const REST = "REST";
     public const DATA = "DATA";
 
+
+
+
+    // =================================================================================================================
+    // FILE-BASED LOGGING
+    // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Provides the path to the current log file.
+     *
+     * @return string Returns the absolute path to the 'data/plugin.log' file and creates it if missing.
+     * @throws Exceptions\PluginNotInitializedException
+     */
+    public static function pluginFile(): string
+    {
+        // Get the absolute path to the data folder, creating the folder as needed.
+        $path = Plugin::getDataPath()."/plugin.log";
+
+        // IF the current log file does not exist...
+        if(!file_exists($path))
+        {
+            // THEN create it and append a notification.
+            file_put_contents($path, "");
+            self::info("Log file created!");
+        }
+
+        // Return the absolute path to the current log file.
+        return realpath($path) ?: $path;
+    }
+
+    // =================================================================================================================
+    // SQL-BASED LOGGING
+    // -----------------------------------------------------------------------------------------------------------------
+
     private static $_loggers = [];
 
     private static function getLoggers(): array
@@ -102,7 +81,7 @@ final class Log
         if(self::$_loggers === [])
         {
             self::$_loggers = [
-                self::UCRM => self::addStandardLogger("UCRM"), // plugin.log
+                self::UCRM => self::addUcrmFileLogger("UCRM"), // plugin.log
                 self::HTTP => self::addDatabaseLogger("HTTP"),
                 self::REST => self::addDatabaseLogger("REST"),
                 self::DATA => self::addDatabaseLogger("DATA"),
@@ -119,104 +98,183 @@ final class Log
 
 
 
+    private static $_standardHandler = null;
     private static $_databaseHandler = null;
+    private static $_ucrmFileHandler = null;
 
     private static function addDatabaseLogger(string $name = self::UCRM): Logger
     {
+
+
+        // Instantiate a new logger.
         $logger = new Logger($name);
 
-        $resources = [
-            //Plugin::getDataPath() . ($name === self::UCRM ? "/plugin.log" : "/logs/" . strtolower($name) .".log"),
-            PHP_SAPI === "cli-server" ? "php://stdout" : ""
-        ];
-
-        foreach(array_filter($resources) as $resource)
+        // IF the current system is running the PHP Built-In Web Server (CLI)...
+        if(PHP_SAPI === "cli-server")
         {
-            $formatter = ($resource === "php://stdout") ?
-                new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT) :
-                new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT);
+            // ...THEN setup the "stdout" StreamHandler.
 
-            $logger->pushHandler((new StreamHandler($resource))->setFormatter($formatter));
+            // NOTE: Here we configure a static instance of the StreamHandler, if one is not already instantiated!
+            if(!self::$_standardHandler)
+                self::$_standardHandler = (new StreamHandler("php://stdout"))
+                    ->setFormatter(new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT));
+
+            // And add it as a secondary Handler.
+            $logger->pushHandler(self::$_standardHandler);
         }
 
+        // NOTE: Here we configure a static instance of the Sqlite3Handler, if one is not already instantiated!
         if(!self::$_databaseHandler)
             self::$_databaseHandler = new Sqlite3Handler(Plugin::getDataPath()."/plugin.db");
 
+        // And add it as the primary Handler.
         $logger->pushHandler(self::$_databaseHandler);
 
+        // NOTE: Add any additional Processors below, custom or otherwise...
         $logger->pushProcessor(new IntrospectionProcessor());
         $logger->pushProcessor(new WebProcessor());
 
+        // Finally, return the newly added Logger!
         return $logger;
     }
 
-
-    private static function addStandardLogger(string $name = self::UCRM): Logger
+    private static function addUcrmFileLogger(string $name = self::UCRM): Logger
     {
+        // Instantiate a new logger.
         $logger = new Logger($name);
 
-        $resources = [
-            Plugin::getDataPath() . ($name === self::UCRM ? "/plugin.log" : "/logs/" . strtolower($name) .".log"),
-            PHP_SAPI === "cli-server" ? "php://stdout" : ""
-        ];
-
-        foreach(array_filter($resources) as $resource)
+        // IF the current system is running the PHP Built-In Web Server (CLI)...
+        if(PHP_SAPI === "cli-server")
         {
-            $formatter = ($resource === "php://stdout") ?
-                new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT) :
-                new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT);
+            // ...THEN setup the "stdout" StreamHandler.
 
-            $logger->pushHandler((new StreamHandler($resource))->setFormatter($formatter));
+            // NOTE: Here we configure a static instance of the StreamHandler, if one is not already instantiated!
+            if(!self::$_standardHandler)
+                self::$_standardHandler = (new StreamHandler("php://stdout"))
+                    ->setFormatter(new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT));
+
+            // And add it as a secondary Handler.
+            $logger->pushHandler(self::$_standardHandler);
         }
 
+        // NOTE: Here we configure a static instance of the Streamhandler, if one is not already instantiated!
+        if(!self::$_ucrmFileHandler)
+            self::$_ucrmFileHandler = (new StreamHandler(Plugin::getDataPath()."/plugin.log"))
+                ->setFormatter(new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT));
+
+        // And add it as the primary Handler.
+        $logger->pushHandler(self::$_ucrmFileHandler);
+
+        // NOTE: Add any additional Processors below, custom or otherwise...
         $logger->pushProcessor(new IntrospectionProcessor());
         $logger->pushProcessor(new WebProcessor());
 
+        // Finally, return the newly added Logger!
         return $logger;
     }
 
     public static function addLogger(Logger $logger): Logger
     {
-        if(!is_a(self::$_loggers[$logger->getName()], Logger::class))
-            throw new Exception("Not a valid Logger!");
+        // NOTE: Here I assume that the end-user wants to override the identically named Logger.
 
+        // IF the Logger's name already exists in the current loggers, THEN remove it!
         if(array_key_exists($logger->getName(), self::getLoggers()))
             unset(self::$_loggers[$logger->getName()]);
 
+        // And then add the new Logger to the current loggers.
         self::$_loggers[$logger->getName()] = $logger;
 
+        // Finally, return the newly added Logger!
         return $logger;
     }
-
-
-
-
 
     // =================================================================================================================
     // WRITING
     // -----------------------------------------------------------------------------------------------------------------
 
-
-
-
+    /**
+     * @param AbstractProcessingHandler $handler
+     * @param string $property
+     *
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    private static function getHandlerProperty(AbstractProcessingHandler $handler, string $property)
+    {
+        $reflection = new \ReflectionClass($handler);
+        $prop = $reflection->getProperty($property);
+        $prop->setAccessible(true);
+        return $prop->getValue($handler);
+    }
 
     /**
-     * Clears the current log file.
+     * Clears the entries from all supported Loggers, matching the specified "channel".
      *
-     * @param bool $log Determines whether or not to add an INFO message stating the log was cleared, defaults to TRUE.
+     * @param string $message An optional message to append to the cleared Logger.
+     * @param string $name
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function clear(bool $log = true): void
+    public static function clear(string $message = "", string $name = self::UCRM): int
     {
-        $logFile = self::logFile();
+        if(!($logger = self::getLogger($name)))
+            return -1;
 
-        // Empty the file.
-        file_put_contents($logFile, "", LOCK_EX);
+        $cleared = 0;
 
-        // IF desired, write an INFO message to the file about it being cleared!
-        if($log)
-            self::info("Log cleared!");
+        foreach($logger->getHandlers() as $handler)
+        {
+            if(is_a($handler, StreamHandler::class) &&
+                ($url = self::getHandlerProperty($handler, "url")) && $url !== "php://stdout")
+            {
+                $path = realpath($url);
+                $lines = 0;
+
+                if($path && is_file($path))
+                {
+                    $lines = count(explode("\n", file_get_contents($path)));
+                    file_put_contents($path, "", LOCK_EX);
+                }
+
+                if(file_get_contents($path) === "")
+                {
+                    $cleared++;
+
+                    if($message)
+                        Log::info($message, $name, [ "cleared" => $lines ]);
+                }
+
+                continue;
+            }
+
+            if(is_a($handler, Sqlite3Handler::class))
+            {
+                $pdo = self::getHandlerProperty($handler, "pdo");
+
+                $count = $pdo->exec("
+                    DELETE FROM logs WHERE channel = '$name';                
+                ");
+
+                if($count > 0)
+                {
+                    $cleared++;
+
+                    if($message)
+                        Log::info($message, $name, [ "cleared" => $count ]);
+                }
+
+                continue;
+            }
+
+            // NOTE: Add any other types of clear() functionality for the other Handlers as needed!
+            // ...
+        }
+
+        return $cleared;
     }
+
+
+
+
 
     /**
      * Writes a message to the current log file.
@@ -282,12 +340,12 @@ final class Log
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function debug(string $message, string $log = self::UCRM): ?LogEntry
+    public static function debug(string $message, string $log = self::UCRM, array $context = []): ?LogEntry
     {
         if(!($logger = self::getLogger($log)))
             return null;
 
-        if(!($result = $logger->debug($message)))
+        if(!($result = $logger->debug($message, $context)))
             return null;
 
         // TODO: Finish deprecating the old Log::debug().
@@ -301,12 +359,12 @@ final class Log
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function info(string $message, string $log = self::UCRM): ?LogEntry
+    public static function info(string $message, string $log = self::UCRM, array $context = []): ?LogEntry
     {
         if(!($logger = self::getLogger($log)))
             return null;
 
-        if(!($result = $logger->info($message)))
+        if(!($result = $logger->info($message, $context)))
             return null;
 
         // TODO: Finish deprecating the old Log::info().
