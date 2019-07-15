@@ -72,7 +72,7 @@ class PluginAuthentication
 
         // Display an error if no user is authenticated!
         if(!$user)
-            Log::http("No User is currently Authenticated!", 401);
+            Log::http("No User is currently Authenticated!", Log::HTTP, 401);
 
         if($this->verification !== null && is_callable($this->verification) && !($this->verification)($user))
         {
@@ -84,6 +84,7 @@ class PluginAuthentication
         // Set the current session user on the container, for later use in the application.
         $this->container["sessionUser"] = $user;
         PluginExtension::setGlobal("sessionUser", $user);
+        $request = $request->withAttribute("sessionUser", $user);
 
         // If a valid user is authenticated and
         return $next($request, $response);
