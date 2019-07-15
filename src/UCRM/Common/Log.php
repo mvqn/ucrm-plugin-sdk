@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
-use App\MonoLog\Handlers\Sqlite3Handler;
+use UCRM\MonoLog\Handlers\Sqlite3Handler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -177,7 +177,7 @@ final class Log
 
     public static function addLogger(Logger $logger): Logger
     {
-        if(!is_a(self::$_loggers[$context], Logger::class))
+        if(!is_a(self::$_loggers[$logger->getName()], Logger::class))
             throw new Exception("Not a valid Logger!");
 
         if(array_key_exists($logger->getName(), self::getLoggers()))
