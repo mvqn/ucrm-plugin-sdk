@@ -40,9 +40,6 @@ final class Log
     public const REST = "REST";
     public const DATA = "DATA";
 
-
-
-
     // =================================================================================================================
     // FILE-BASED LOGGING
     // -----------------------------------------------------------------------------------------------------------------
@@ -283,6 +280,7 @@ final class Log
      * @param string $severity An optional severity level to flag the log entry.
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
+     * @deprecated
      */
     public static function write(string $message, string $severity = LogEntry::SEVERITY_NONE): LogEntry
     {
@@ -307,6 +305,7 @@ final class Log
      * @param int $options An optional set of valid JSON_OPTIONS that should be used when encoding the array.
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
+     * @deprecated
      */
     public static function writeArray(array $array, string $severity = "",
         int $options = self::DEFAULT_JSON_OPTIONS): LogEntry
@@ -324,6 +323,7 @@ final class Log
      * @param int $options An optional set of valid JSON_OPTIONS that should be used when encoding the array.
      * @return LogEntry Returns the logged entry.
      * @throws Exceptions\PluginNotInitializedException
+     * @deprecated
      */
     public static function writeObject(\JsonSerializable $object, string $severity = "",
         int $options = self::DEFAULT_JSON_OPTIONS): LogEntry

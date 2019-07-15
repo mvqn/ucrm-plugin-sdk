@@ -118,12 +118,12 @@ final class Plugin
      * @var array The Plugin's options.
      */
     private static $_options =
-    [
-        // A list of any required modules.
-        "modules" => [
-            // None required by default!
-        ]
-    ];
+        [
+            // A list of any required modules.
+            "modules" => [
+                // None required by default!
+            ]
+        ];
 
     /**
      * Initializes the Plugin singleton.
@@ -919,14 +919,14 @@ final class Plugin
                 ->addComment("@const string|null The locally accessible URL of this UCRM, null if not configured.");
 
             if(array_key_exists("unmsLocalUrl", $ucrm) && $ucrm["unmsLocalUrl"] !== null)
-            // This entry should exist when run on the new UNMS system, but can be null!
-            $_class
-                ->addConstant("UNMS_LOCAL_URL", $ucrm["unmsLocalUrl"] !== null ?
-                    rtrim($ucrm["unmsLocalUrl"], "/") :
-                    null
-                )
-                ->setVisibility("public")
-                ->addComment("@const string|null The locally accessible URL of this UNMS, null if not configured.");
+                // This entry should exist when run on the new UNMS system, but can be null!
+                $_class
+                    ->addConstant("UNMS_LOCAL_URL", $ucrm["unmsLocalUrl"] !== null ?
+                        rtrim($ucrm["unmsLocalUrl"], "/") :
+                        null
+                    )
+                    ->setVisibility("public")
+                    ->addComment("@const string|null The locally accessible URL of this UNMS, null if not configured.");
 
             // IF the Plugin's public URL is not set AND there is a "public.php" file present...
             if($ucrm["pluginPublicUrl"] === null && file_exists($root."/public.php"))
@@ -1023,12 +1023,12 @@ final class Plugin
 
             // NOTE: This should NEVER really happen!
             if(self::hasModule(self::MODULE_DATA) && (
-                $parameters["database_driver"] === null ||
-                $parameters["database_host"] === null ||
-                $parameters["database_name"] === null ||
-                $parameters["database_password"] === null ||
-                $parameters["database_port"] === null ||
-                $parameters["database_user"] === null
+                    $parameters["database_driver"] === null ||
+                    $parameters["database_host"] === null ||
+                    $parameters["database_name"] === null ||
+                    $parameters["database_password"] === null ||
+                    $parameters["database_port"] === null ||
+                    $parameters["database_user"] === null
                 ))
             {
                 echo "
@@ -1258,6 +1258,54 @@ final class Plugin
     public static function environment(): string
     {
         return (file_exists(self::getRootPath()."/../.env")) ? "dev" : "prod";
+    }
+
+
+    private static $_pdo = null;
+
+
+    public static function database(): \PDO
+    {
+        $path = Plugin::getDataPath() . DIRECTORY_SEPARATOR . "plugin.db";
+
+        if(!self::$_pdo)
+        {
+            try
+            {
+                self::$_pdo = new \PDO(
+                    "sqlite:".$path,
+                    NULL,
+                    NULL,
+                    [
+                        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC
+                    ]
+                );
+            }
+            catch(\PDOException $e)
+            {
+                http_send_status(400);
+                die("The Plugin's Database could not be opened!\n$e");
+            }
+        }
+
+        return self::$_pdo;
+    }
+
+    public static function dbQuery(string $statement): array
+    {
+        $pdo = self::database();
+
+        try
+        {
+            return $pdo->query($statement)->fetchAll();
+        }
+        catch(\PDOException $e)
+        {
+            http_send_status(400);
+            die("The Plugin's Database could not be accessed!\n$e");
+        }
+
+
     }
 
 
