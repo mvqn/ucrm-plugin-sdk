@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use App\MonoLog\Handlers\Sqlite3Handler;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -102,9 +103,9 @@ final class Log
         {
             self::$_loggers = [
                 self::UCRM => self::addStandardLogger("UCRM"), // plugin.log
-                self::HTTP => self::addStandardLogger("HTTP"),
-                self::REST => self::addStandardLogger("REST"),
-                self::DATA => self::addStandardLogger("DATA"),
+                self::HTTP => self::addDatabaseLogger("HTTP"),
+                self::REST => self::addDatabaseLogger("REST"),
+                self::DATA => self::addDatabaseLogger("DATA"),
             ];
         }
 
@@ -114,6 +115,39 @@ final class Log
     public static function getLogger(string $name = self::UCRM): ?Logger
     {
         return array_key_exists($name, self::getLoggers()) ? self::$_loggers[$name] : null;
+    }
+
+
+
+    private static $_databaseHandler = null;
+
+    private static function addDatabaseLogger(string $name = self::UCRM): Logger
+    {
+        $logger = new Logger($name);
+
+        $resources = [
+            //Plugin::getDataPath() . ($name === self::UCRM ? "/plugin.log" : "/logs/" . strtolower($name) .".log"),
+            PHP_SAPI === "cli-server" ? "php://stdout" : ""
+        ];
+
+        foreach(array_filter($resources) as $resource)
+        {
+            $formatter = ($resource === "php://stdout") ?
+                new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT) :
+                new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT);
+
+            $logger->pushHandler((new StreamHandler($resource))->setFormatter($formatter));
+        }
+
+        if(!self::$_databaseHandler)
+            self::$_databaseHandler = new Sqlite3Handler(Plugin::getDataPath()."/plugin.db");
+
+        $logger->pushHandler(self::$_databaseHandler);
+
+        $logger->pushProcessor(new IntrospectionProcessor());
+        $logger->pushProcessor(new WebProcessor());
+
+        return $logger;
     }
 
 

@@ -25,6 +25,7 @@
 
         "nette/php-generator": "~3.2",
         "defuse/php-encryption": "~2.2",
+        "monolog/monolog": "^1.24",
 
         "phpunit/phpunit": "~8",
         "vlucas/phpdotenv": "~2.5",
