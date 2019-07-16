@@ -17,7 +17,6 @@
         "ext-json": "*",
         "ext-zip": "*",
         "ext-pdo": "*",
-        "ext-http": "*",
         "ext-intl": "*",
 
         "mvqn/data": "1.*",

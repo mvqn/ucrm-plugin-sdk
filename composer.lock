@@ -392,16 +392,16 @@
         },
         {
             "name": "mvqn/annotations",
-            "version": "1.2.1",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/annotations.git",
-                "reference": "afd112b5c2887bc8e3acb8703832c0afff5bc335"
+                "reference": "8a8b78f94042cceef5be5033d87785c40faa7bf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/annotations/zipball/afd112b5c2887bc8e3acb8703832c0afff5bc335",
-                "reference": "afd112b5c2887bc8e3acb8703832c0afff5bc335",
+                "url": "https://api.github.com/repos/mvqn/annotations/zipball/8a8b78f94042cceef5be5033d87785c40faa7bf6",
+                "reference": "8a8b78f94042cceef5be5033d87785c40faa7bf6",
                 "shasum": ""
             },
             "require": {
@@ -430,7 +430,7 @@
                 }
             ],
             "description": "A semi-complex PHP-Doc Annotation parsing library, specifically designed for use in MVQN projects, but generic enough for anything!",
-            "time": "2018-11-07T11:04:54+00:00"
+            "time": "2019-07-16T04:13:51+00:00"
         },
         {
             "name": "mvqn/collections",
@@ -564,16 +564,16 @@
         },
         {
             "name": "mvqn/dynamics",
-            "version": "1.2.5",
+            "version": "1.2.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/dynamics.git",
-                "reference": "eeb4a03faf93b5589660b02eb4704f1ed3b11176"
+                "reference": "704c0c8f2bcb97fa112725952ea5507e6c8332d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/dynamics/zipball/eeb4a03faf93b5589660b02eb4704f1ed3b11176",
-                "reference": "eeb4a03faf93b5589660b02eb4704f1ed3b11176",
+                "url": "https://api.github.com/repos/mvqn/dynamics/zipball/704c0c8f2bcb97fa112725952ea5507e6c8332d6",
+                "reference": "704c0c8f2bcb97fa112725952ea5507e6c8332d6",
                 "shasum": ""
             },
             "require": {
@@ -581,10 +581,10 @@
                 "mvqn/annotations": "~1",
                 "mvqn/collections": "~1",
                 "mvqn/common": "~1",
-                "php": "~7.1"
+                "php": "~7.2"
             },
             "require-dev": {
-                "phpunit/phpunit": "7.2.7"
+                "phpunit/phpunit": ">=8"
             },
             "type": "library",
             "autoload": {
@@ -603,7 +603,7 @@
                 }
             ],
             "description": "A library for dynamic objects and methods.",
-            "time": "2018-11-24T19:51:32+00:00"
+            "time": "2019-07-16T04:21:57+00:00"
         },
         {
             "name": "mvqn/rest",
@@ -1451,16 +1451,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "8.2.4",
+            "version": "8.2.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "25fe0b5031b24722f66a75ad479a074cccc1bb37"
+                "reference": "c1b8534b3730f20f58600124129197bf1183dc92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/25fe0b5031b24722f66a75ad479a074cccc1bb37",
-                "reference": "25fe0b5031b24722f66a75ad479a074cccc1bb37",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/c1b8534b3730f20f58600124129197bf1183dc92",
+                "reference": "c1b8534b3730f20f58600124129197bf1183dc92",
                 "shasum": ""
             },
             "require": {
@@ -1530,7 +1530,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-07-03T08:30:33+00:00"
+            "time": "2019-07-15T06:26:24+00:00"
         },
         {
             "name": "psr/http-message",
