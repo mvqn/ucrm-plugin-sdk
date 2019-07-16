@@ -34,8 +34,8 @@ final class Log
 
 
     private const DEFAULT_TIMESTAMP_FORMAT = "Y-m-d H:i:s.uP";
-    private const DEFAULT_ROW_ENTRY_FORMAT = "[%datetime%] [%level_name%] %message% %context% %extra%\n";
-    private const CHANNEL_ROW_ENTRY_FORMAT = "[%datetime%] [%channel%.%level_name%] %message% %context% %extra%\n";
+    private const DEFAULT_ROW_ENTRY_FORMAT = "[%datetime%] [%level_name%] %message%\n%context%\n%extra%\n";
+    private const CHANNEL_ROW_ENTRY_FORMAT = "[%datetime%] [%channel%.%level_name%] %message%\n%context%\n%extra%\n";
 
     public const UCRM = "UCRM";
     public const HTTP = "HTTP";
@@ -104,8 +104,6 @@ final class Log
 
     private static function addDatabaseLogger(string $name = self::UCRM): Logger
     {
-
-
         // Instantiate a new logger.
         $logger = new Logger($name);
 
@@ -281,6 +279,53 @@ final class Log
         return $cleared;
     }
 
+    public static function last(string $name = self::UCRM): ?LogEntry
+    {
+        if(!($logger = self::getLogger($name)))
+            return null;
+
+        foreach($logger->getHandlers() as $handler)
+        {
+
+            if(is_a($handler, StreamHandler::class) &&
+                ($url = self::getHandlerProperty($handler, "url")) && $url !== "php://stdout")
+            {
+                $path = realpath($url);
+
+                if($path && is_file($path))
+                {
+                    //$lines = explode("\n", file_get_contents($path));
+                    //$last = $lines[count($lines) - 1];
+                    $entry = LogEntry::fromText(file_get_contents($path))->last();
+
+                    return $entry;
+                }
+
+                continue;
+            }
+
+
+            if(is_a($handler, Sqlite3Handler::class))
+            {
+                $pdo = self::getHandlerProperty($handler, "pdo");
+
+                /** @noinspection SqlResolve  */
+                $results = Plugin::dbQuery("
+                    SELECT * FROM logs WHERE channel = '$name' ORDER BY timestamp DESC LIMIT 1;                
+                ");
+
+                if($results && count($results) === 1)
+                    return LogEntry::fromRow($results[0]);
+
+                continue;
+            }
+
+            // NOTE: Add any other types of clear() functionality for the other Handlers as needed!
+            // ...
+        }
+
+        return null;
+    }
 
 
 
@@ -388,8 +433,7 @@ final class Log
         if(!($result = $logger->info($message, $context)))
             return null;
 
-        // TODO: Finish deprecating the old Log::info().
-        return null;
+        return self::last($log);
     }
 
     /**
