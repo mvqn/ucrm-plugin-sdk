@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 namespace UCRM\MonoLog\Handlers;
 
 use Monolog\Logger;
@@ -11,7 +11,7 @@ use UCRM\Common\LogEntry;
  * This class is a handler for Monolog, which can be used to write records in a Sqlite3 database.
  *
  * Class Sqlite3Handler
- * @package wazaari\MysqlHandler
+ * @package mvqn\ucrm-plugin-sdk
  */
 class Sqlite3Handler extends AbstractProcessingHandler
 {
