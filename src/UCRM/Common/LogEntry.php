@@ -19,7 +19,7 @@ use \DateTimeZone;
  * @package MVQN\UCRM\Plugins
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  *
- * @method DateTimeImmutable getTimestamp()
+ * @method string getTimestamp()
  * @method string getChannel()
  * @method int getLevel()
  * @method string getLevelName()
@@ -36,7 +36,7 @@ class LogEntry extends AutoObject
     public const TIMESTAMP_FORMAT_DATETIME = "Y-m-d H:i:s.uP";
 
     /**
-     * @var DateTimeImmutable
+     * @var string
      */
     protected $timestamp;
 
@@ -49,10 +49,13 @@ class LogEntry extends AutoObject
      * @return DateTimeImmutable Returns the local timestamp.
      * @throws Exception
      */
-    public function getTimestampLocal(string $timezone = ""): DateTimeImmutable
+    public function getTimestampLocal(string $timezone = ""): string
     {
         $timezone = $timezone ?: Config::getTimezone() ?: "UTC";
-        return $this->timestamp->setTimezone(new DateTimeZone($timezone));
+
+        return (new DateTimeImmutable($this->timestamp))
+            ->setTimezone(new DateTimeZone($timezone))
+            ->format(self::TIMESTAMP_FORMAT_DATETIME);
     }
 
     /**
@@ -105,6 +108,8 @@ class LogEntry extends AutoObject
             unset($row["level_name"]);
         }
         */
+
+        $row["message"] = str_replace(Log::MESSAGE_NEWLINE_PLACEHOLDER, "\n", $row["message"]);
 
         $context = json_decode($row["context"], true);
         if (json_last_error() == JSON_ERROR_NONE)
@@ -166,7 +171,7 @@ class LogEntry extends AutoObject
                         "channel" => $header[2],
                         "level" => constant("\Monolog\Logger::{$header[3]}"),
                         "levelName" => $header[3],
-                        "message" => $header[4],
+                        "message" => str_replace(Log::MESSAGE_NEWLINE_PLACEHOLDER, "\n", $header[4]),
                     ];
 
                     $context = json_decode($lines[1], TRUE);

@@ -32,6 +32,8 @@ final class Log
     private const /** @noinspection PhpUnusedPrivateFieldInspection */ DEFAULT_JSON_OPTIONS =
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
+    public const MESSAGE_NEWLINE_PLACEHOLDER = "##NEWLINE##";
+
 
     private const DEFAULT_TIMESTAMP_FORMAT = "Y-m-d H:i:s.uP";
     private const DEFAULT_ROW_ENTRY_FORMAT = "[%datetime%] [%level_name%] %message%\n%context%\n%extra%\n";
@@ -296,6 +298,7 @@ final class Log
                 {
                     //$lines = explode("\n", file_get_contents($path));
                     //$last = $lines[count($lines) - 1];
+                    /** @var LogEntry $entry */
                     $entry = LogEntry::fromText(file_get_contents($path))->last();
 
                     return $entry;
@@ -307,7 +310,7 @@ final class Log
 
             if(is_a($handler, Sqlite3Handler::class))
             {
-                $pdo = self::getHandlerProperty($handler, "pdo");
+                //$pdo = self::getHandlerProperty($handler, "pdo");
 
                 /** @noinspection SqlResolve  */
                 $results = Plugin::dbQuery("
@@ -409,6 +412,8 @@ final class Log
         if(!($logger = self::getLogger($log)))
             return null;
 
+        $message = str_replace("\n", self::MESSAGE_NEWLINE_PLACEHOLDER, $message);
+
         if(!($result = $logger->debug($message, $context)))
             return null;
 
@@ -430,6 +435,8 @@ final class Log
         if(!($logger = self::getLogger($log)))
             return null;
 
+        $message = str_replace("\n", self::MESSAGE_NEWLINE_PLACEHOLDER, $message);
+
         if(!($result = $logger->info($message, $context)))
             return null;
 
@@ -448,6 +455,8 @@ final class Log
     {
         if(!($logger = self::getLogger($log)))
             return null;
+
+        $message = str_replace("\n", self::MESSAGE_NEWLINE_PLACEHOLDER, $message);
 
         if(!($result = $logger->warning($message)))
             return null;
@@ -470,7 +479,9 @@ final class Log
         if(!($logger = self::getLogger($log)))
             return null;
 
-        if(!($result = $logger->warning($message)))
+        $message = str_replace("\n", self::MESSAGE_NEWLINE_PLACEHOLDER, $message);
+
+        if(!($result = $logger->error($message)))
             return null;
 
         // TODO: Finish deprecating the old Log::error().
@@ -488,6 +499,8 @@ final class Log
     {
         if(!($logger = self::getLogger($log)))
             return null;
+
+        $message = str_replace("\n", self::MESSAGE_NEWLINE_PLACEHOLDER, $message);
 
         if(!($result = $logger->alert($message)))
             return null;
