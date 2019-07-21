@@ -1,17 +1,14 @@
 <?php
 declare(strict_types=1);
-
 namespace UCRM\Common;
 
 use MVQN\Collections\Collection;
 use MVQN\Dynamics\Annotations\AcceptsAnnotation as Accepts;
 use MVQN\Dynamics\AutoObject;
 
-
 use \Exception;
 use \DateTimeImmutable;
 use \DateTimeZone;
-
 
 /**
  * Class LogEntry
@@ -29,7 +26,6 @@ use \DateTimeZone;
  */
 class LogEntry extends AutoObject
 {
-    //protected const REGEX_TEXT = '/^\[([\w|\-]* [\w|\:|\.\+]*)](?: \[(\w*)\])? (.*)$/m';
     protected const REGEX_ENTRY_HEADER = '/^\[([\w|\-]* [\w|\:|\.\+]*)](?: \[(?:(\w*)\.)?(\w*)\])? (.*)$/m';
 
     /** @const string The format to be used as the timestamp. */
@@ -46,7 +42,7 @@ class LogEntry extends AutoObject
      *
      * @param string $timezone A PHP supported timezone in the typical format "Country/Region", defaults to "UTC".
      *
-     * @return DateTimeImmutable Returns the local timestamp.
+     * @return string Returns the local timestamp, formatted according to LogEntry::TIMESTAMP_FORMAT_DATETIME.
      * @throws Exception
      */
     public function getTimestampLocal(string $timezone = ""): string
