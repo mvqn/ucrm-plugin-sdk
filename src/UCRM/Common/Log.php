@@ -160,7 +160,7 @@ final class Log
         // NOTE: Here we configure a static instance of the StreamHandler, if one is not already instantiated!
         if(!self::$_ucrmFileHandler)
             self::$_ucrmFileHandler = (new StreamHandler(Plugin::getDataPath()."/plugin.log"))
-                ->setFormatter(new LineFormatter(self::DEFAULT_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT));
+                ->setFormatter(new LineFormatter(self::CHANNEL_ROW_ENTRY_FORMAT, self::DEFAULT_TIMESTAMP_FORMAT));
 
         // And add it as the primary Handler.
         $logger->pushHandler(self::$_ucrmFileHandler);
