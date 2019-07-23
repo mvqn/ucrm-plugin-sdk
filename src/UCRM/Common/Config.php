@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Common;
 
+use App\Settings;
 use Defuse\Crypto\Exception\BadFormatException;
 use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
@@ -124,12 +125,14 @@ final class Config extends AutoObject
 
         // Create a database connection using environment variables, from either an .env file or the actual environment.
         // NOTE: These variables all exist on the production servers!
+
+
         Database::connect(
-            getenv("POSTGRES_HOST"),
-            (int)getenv("POSTGRES_PORT"),
-            getenv("POSTGRES_DB"),
-            getenv("POSTGRES_USER"),
-            getenv("POSTGRES_PASSWORD")
+            getenv("POSTGRES_HOST") ?: Settings::UCRM_DB_HOST,
+            (int)getenv("POSTGRES_PORT") ?: Settings::UCRM_DB_PORT,
+            getenv("POSTGRES_DB") ?: Settings::UCRM_DB_NAME,
+            getenv("POSTGRES_USER") ?: Settings::UCRM_DB_USER,
+            getenv("POSTGRES_PASSWORD") ?: Settings::UCRM_DB_PASSWORD
         );
 
         // Generate the Cryptographic Key used by the Crypto library from the has already created by the UCRM server.
@@ -149,15 +152,15 @@ final class Config extends AutoObject
 
         // SMTP TRANSPORT
         $option = $options->where("code", "MAILER_TRANSPORT")->first();
-        self::$smtpTransport = $option->getValue();
+        self::$smtpTransport = $option ? $option->getValue() : null;
 
         // SMTP USERNAME
         $option = $options->where("code", "MAILER_USERNAME")->first();
-        self::$smtpUsername = $option->getValue();
+        self::$smtpUsername = $option ? $option->getValue() : null;
 
         // SMTP PASSWORD
         $option = $options->where("code", "MAILER_PASSWORD")->first();
-        if($option->getValue() !== null)
+        if($option && $option->getValue() !== null)
             self::$smtpPassword = $option->getValue() !== "" ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
 
         //if (self::$smtpPassword === null || self::$smtpPassword === "")
@@ -165,28 +168,28 @@ final class Config extends AutoObject
 
         // SMTP HOST
         $option = $options->where("code", "MAILER_HOST")->first();
-        self::$smtpHost = self::$smtpTransport === "gmail" ? "smtp.gmail.com" : $option->getValue();
+        self::$smtpHost = self::$smtpTransport === "gmail" ? "smtp.gmail.com" : ($option ? $option->getValue() : null);
 
         // SMTP PORT
         $option = $options->where("code", "MAILER_PORT")->first();
-        self::$smtpPort = self::$smtpTransport === "gmail" ? "587" : $option->getValue();
+        self::$smtpPort = self::$smtpTransport === "gmail" ? "587" : ($option ? $option->getValue() : null);
 
         // SMTP ENCRYPTION
         $option = $options->where("code", "MAILER_ENCRYPTION")->first();
         // None = "", SSL = "ssl", TLS = "tls"
-        self::$smtpEncryption = self::$smtpTransport === "gmail" ? "tls" : $option->getValue();
+        self::$smtpEncryption = self::$smtpTransport === "gmail" ? "tls" : ($option ? $option->getValue() : null);
 
         // SMTP AUTHENTICATION ( None = "", Plain = "plain", Login = "login", CRAM-MD5 = "cram-md5" )
         $option = $options->where("code", "MAILER_AUTH_MODE")->first();
-        self::$smtpAuthentication = self::$smtpTransport === "gmail" ? "login" : $option->getValue(); //
+        self::$smtpAuthentication = self::$smtpTransport === "gmail" ? "login" : ($option ? $option->getValue() : null);
 
         // SMTP VERIFY SSL CERTIFICATE?
         $option = $options->where("code", "MAILER_VERIFY_SSL_CERTIFICATES")->first();
-        self::$smtpVerifySslCertificate = (bool)$option->getValue();
+        self::$smtpVerifySslCertificate = $option ? (bool)$option->getValue() : null;
 
         // SMTP SENDER ADDRESS
         $option = $options->where("code", "MAILER_SENDER_ADDRESS")->first();
-        self::$smtpSenderEmail = $option->getValue();
+        self::$smtpSenderEmail = $option ? $option->getValue() : null;
 
         if(Plugin::hasModule(Plugin::MODULE_SMTP) && (
                 self::$smtpTransport === null ||
@@ -230,11 +233,11 @@ final class Config extends AutoObject
 
         // SERVER FQDN
         $option = $options->where("code", "SERVER_FQDN")->first();
-        self::$serverFQDN = $option->getValue();
+        self::$serverFQDN = $option ? $option->getValue() : null;
 
         // SERVER PORT
         $option = $options->where("code", "SERVER_PORT")->first();
-        self::$serverPort = (int)$option->getValue();
+        self::$serverPort = $option ? (int)$option->getValue() : null;
 
         $properties = get_class_vars(Config::class);
         if($properties["smtpPassword"] !== null)
