@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace UCRM\Sessions;
 
+use GuzzleHttp\Client;
 use MVQN\REST\RestClient;
 use UCRM\Common\Config;
 use UCRM\Sessions\SessionUser;
@@ -15,21 +16,23 @@ use UCRM\Sessions\SessionUser;
  */
 class Session
 {
-
     /**
      * @return \UCRM\Sessions\SessionUser|null
      * @throws \Exception
      */
     public static function getCurrentUser(): ?\UCRM\Sessions\SessionUser
     {
+        $cookies = [];
+
         // IF the PHPSESSID cookie is not currently set, THEN no user is currently logged in, so return NULL!
-        if(!isset($_COOKIE["PHPSESSID"]))
-            return null;
+        if(isset($_COOKIE["PHPSESSID"]))
+            $cookies[] =  "PHPSESSID=" . preg_replace('~[^a-zA-Z0-9-]~', "", $_COOKIE["PHPSESSID"]);
 
-        // TODO: Add the cookies for "nms-crm-php-session-id" and "nms-session" to account for the new UNMS+UCRM system!
+        if(isset($_COOKIE["nms-crm-php-session-id"]))
+            $cookies[] =  "nms-crm-php-session-id=" . preg_replace('~[^a-zA-Z0-9-]~', "", $_COOKIE["nms-crm-php-session-id"]);
 
-        // TODO: Also handle the modified URL of "/crm/current-user" in the case of UNMS+UCRM!
-
+        if(isset($_COOKIE["nms-session"]))
+            $cookies[] =  "nms-session=" . preg_replace('~[^a-zA-Z0-9-]~', "", $_COOKIE["nms-session"]);
 
         // In the case of /current-user, ALWAYS use localhost for security!
         $host = "localhost";
@@ -41,23 +44,26 @@ class Session
                 $protocol = "http";
                 $port = "";
                 break;
+
             case 443:
                 $protocol = "https";
                 $port = "";
                 break;
+
             default:
                 $protocol = "http"; // TODO: Check to determine whether we can get HTTP/HTTPS from the database also!
-                $port = ":".Config::getServerPort(); // Non-standard port is being used here!
+                $port = (Config::getServerPort() ? ":".Config::getServerPort() : "");
                 break;
         }
 
         // Combine the pieces to make up the request URL.
-        $url = "$protocol://$host$port";
+        $url = "$protocol://$host$port";// . "/crm"; // UNMS
 
         // Generate the necessary headers, passing along the PHP Session ID.
         $headers = [
             "Content-Type: application/json",
-            "Cookie: PHPSESSID=" . preg_replace('~[^a-zA-Z0-9]~', "", $_COOKIE["PHPSESSID"] ?? ""),
+            //"Cookie: PHPSESSID=" . preg_replace('~[^a-zA-Z0-9]~', "", $_COOKIE["PHPSESSID"] ?? ""),
+            (count($cookies) > 0 ? "Cookie: " . implode("; ", $cookies) : ""),
         ];
 
         // Store the current cURL client's base URL and headers, to restore when complete.
@@ -70,6 +76,10 @@ class Session
 
         // Make a request to the UCRM server to get the currently logged in user.
         $results = RestClient::get("/current-user");
+
+        if(!$results)
+            $results = RestClient::get("/crm/current-user");
+
 
         // Restore the old cURL client's base URL and headers.
         RestClient::setBaseUrl($oldUrl);
