@@ -35,7 +35,7 @@ final class Plugin
      * NOTES:
      *   - By default the below will generate the settings in a file named "Settings.php" that lives in a folder named
      *     "App" in the "src" folder of including plugin's root folder.
-     *     Example: <code>PLUGIN_ROOT/src/App/Settings.php</code>
+     *     Example: <code>PLUGIN_ROOT/server/App/Settings.php</code>
      *
      *   - The PSR-4 class name will be \App\Settings
      ******************************************************************************************************************/
@@ -303,16 +303,16 @@ final class Plugin
 
         #endregion
 
-        #region OPTIONAL: /src/
+        #region OPTIONAL: /server/
 
         // Get the absolute "source" path, relative to the "root" path.
-        $src = realpath($root."/src/");
+        $src = realpath($root."/server/");
 
         // IF the source path is invalid or does not exist...
         if(!$src || !file_exists($src))
         {
             // NOTE: By performing this check after the Plugin's required files, we can now simply create this folder!
-            mkdir($root."/src/", 0775, TRUE);
+            mkdir($root."/server/", 0775, TRUE);
 
             /*
             // THEN throw an Exception, as we cannot do anything else without this path!
@@ -376,7 +376,7 @@ final class Plugin
         //    mkdir("$root/src/");
 
         // Finally, return the SOURCE path!
-        return realpath("$root/src/");
+        return realpath("$root/server/");
     }
 
     /**
@@ -392,11 +392,31 @@ final class Plugin
 
         // NOTE: This is now handled in Plugin::initialize().
         // IF the directory does not exist, THEN create it...
-        //if(!file_exists("$root/data/"))
-        //    mkdir("$root/data/");
+        if(!file_exists("$root/data/"))
+            mkdir("$root/data/");
 
         // Finally, return the DATA path!
         return realpath("$root/data/");
+    }
+
+    /**
+     * Gets the "logs" path.
+     *
+     * @return string Returns the absolute LOGS path of this Plugin.
+     * @throws Exceptions\PluginNotInitializedException
+     */
+    public static function getLogsPath(): string
+    {
+        // Get the ROOT path, which will also throw the PluginNotInitializedException if necessary.
+        $data = self::getDataPath();
+
+        // NOTE: This is now handled in Plugin::initialize().
+        // IF the directory does not exist, THEN create it...
+        if(!file_exists("$data/logs/"))
+            mkdir("$data/logs/");
+
+        // Finally, return the DATA path!
+        return realpath("$data/logs/");
     }
 
     #endregion
@@ -1102,7 +1122,9 @@ final class Plugin
 
         // Generate the code for the Settings file.
         $code =
-            "<?php /** @noinspection SpellCheckingInspection */\n".
+            "<?php\n".
+            "/** @noinspection PhpUnused */\n" .
+            "/** @noinspection SpellCheckingInspection */\n".
             "declare(strict_types=1);\n".
             "\n".
             $_namespace;
@@ -1277,7 +1299,7 @@ final class Plugin
      */
     public static function environment(): string
     {
-        return (file_exists(self::getRootPath()."/../.env")) ? "dev" : "prod";
+        return (file_exists(self::getRootPath()."/.env")) ? "dev" : "prod";
     }
 
 

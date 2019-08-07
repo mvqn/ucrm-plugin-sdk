@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection SpellCheckingInspection */
 declare(strict_types=1);
 
 namespace UCRM\Sessions;
@@ -6,6 +6,7 @@ namespace UCRM\Sessions;
 use GuzzleHttp\Client;
 use MVQN\REST\RestClient;
 use UCRM\Common\Config;
+use UCRM\Common\Plugin;
 use UCRM\Sessions\SessionUser;
 
 /**
@@ -22,7 +23,9 @@ class Session
      */
     public static function getCurrentUser(): ?\UCRM\Sessions\SessionUser
     {
+
         $cookies = [];
+
 
         // IF the PHPSESSID cookie is not currently set, THEN no user is currently logged in, so return NULL!
         if(isset($_COOKIE["PHPSESSID"]))
@@ -36,6 +39,8 @@ class Session
 
         // In the case of /current-user, ALWAYS use localhost for security!
         $host = "localhost";
+
+        //var_dump($cookies);
 
         // Check to determine which scheme and port to use for the lookup...
         switch(Config::getServerPort())
