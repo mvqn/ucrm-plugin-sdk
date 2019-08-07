@@ -17,10 +17,10 @@ if($argc === 1)
 }
 
 // Should always be "PLUGIN_ROOT/src" during development, as this will be run from
-$pluginPath = realpath(__DIR__."/../../../../");
+$pluginPath = realpath(__DIR__."/../../../../../");
 
 /** @noinspection PhpIncludeInspection */
-require_once $pluginPath."/vendor/autoload.php";
+require_once $pluginPath."/server/vendor/autoload.php";
 
 use Dotenv\Dotenv;
 use UCRM\SFTP\SftpClient;
@@ -43,8 +43,8 @@ $pluginName = json_decode(file_get_contents($pluginPath."/manifest.json"), true)
 // Get the plugin's version from the manifest.json file, as we do not want to unnecessarily create Settings.
 $pluginVersion = json_decode(file_get_contents($pluginPath."/manifest.json"), true)["information"]["version"];
 
-if(file_exists($pluginPath."/../.env"))
-    (new Dotenv($pluginPath."/../"))->load();
+if(file_exists($pluginPath."/.env"))
+    (new Dotenv($pluginPath))->load();
 
 Plugin::initialize($pluginPath);
 
@@ -53,13 +53,13 @@ switch ($argv[1])
 {
     // Perform initialization of the Plugin libraries and create the auto-generated Settings class.
     case "create":
-        Plugin::createSettings("App", "Settings", $pluginPath."/src/");
+        Plugin::createSettings("App", "Settings", $pluginPath."/server/");
         break;
 
     // Bundle the 'zip/' directory into a package ready for Plugin installation on the UCRM server.
     case "bundle":
         //Plugin::bundle($pluginPath, $pluginName."_".$pluginVersion, ".zipignore", $projectPath);
-        Plugin::bundle($pluginPath, $pluginName, ".zipignore", $projectPath);
+        Plugin::bundle($pluginPath, $pluginName, $pluginPath."/.zipignore", $projectPath);
         break;
 
     case "sync":
