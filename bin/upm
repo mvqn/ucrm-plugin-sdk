@@ -17,10 +17,10 @@ if($argc === 1)
 }
 
 // Should always be "PLUGIN_ROOT/src" during development, as this will be run from
-$pluginPath = realpath(__DIR__."/../../../../");
+$pluginPath = realpath(__DIR__."/../../../../../");
 
 /** @noinspection PhpIncludeInspection */
-require_once $pluginPath."/vendor/autoload.php";
+require_once $pluginPath."/server/vendor/autoload.php";
 
 use Dotenv\Dotenv;
 use UCRM\SFTP\SftpClient;
