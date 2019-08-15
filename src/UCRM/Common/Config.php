@@ -15,6 +15,7 @@ use MVQN\Dynamics\AutoObject;
 
 use MVQN\Data\Database;
 use ReflectionException;
+use UCRM\Common\Exceptions\CryptoKeyNotFoundException;
 use UCRM\Data\Models\Option;
 
 /**
@@ -138,7 +139,15 @@ final class Config extends AutoObject
         // Generate the Cryptographic Key used by the Crypto library from the has already created by the UCRM server.
         // NOTE: The '../../encryption/crypto.key' file will not exist in development environments and the crypto hash
         // will need to be included in an .env file for decryption to work in development!
-        $cryptoKey = Plugin::getCryptoKey() ?? Key::loadFromAsciiSafeString(getenv("CRYPTO_KEY"));
+        try
+        {
+            $cryptoKey = Plugin::getCryptoKey() ?? Key::loadFromAsciiSafeString(getenv("CRYPTO_KEY"));
+        }
+        catch(CryptoKeyNotFoundException $e)
+        {
+            // TODO: Determine the best way to handle this!
+            //var_dump($cryptoKey);
+        }
 
         // Get a collection of all rows of the option table from the database!
         $options = Option::select();
