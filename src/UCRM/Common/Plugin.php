@@ -1074,32 +1074,35 @@ final class Plugin
 
         #region parameters.yml
 
-        $parameters = Yaml::parseFile("/usr/src/ucrm/app/config/parameters.yml")["parameters"];
+        if(file_exists("/usr/src/ucrm/app/config/parameters.yml"))
+        {
+            $parameters = Yaml::parseFile("/usr/src/ucrm/app/config/parameters.yml")["parameters"];
 
-        $_class->addConstant("UCRM_DB_DRIVER", $parameters["database_driver"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database Driver.");
+            $_class->addConstant("UCRM_DB_DRIVER", $parameters["database_driver"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Driver.");
 
-        // NOTE: This is "localhost" in UNMS 1.0.0-beta.1 and above, but used to be "postgresql".
-        $_class->addConstant("UCRM_DB_HOST", $parameters["database_host"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database Host.");
+            // NOTE: This is "localhost" in UNMS 1.0.0-beta.1 and above, but used to be "postgresql".
+            $_class->addConstant("UCRM_DB_HOST", $parameters["database_host"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Host.");
 
-        $_class->addConstant("UCRM_DB_NAME", $parameters["database_name"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database Name.");
+            $_class->addConstant("UCRM_DB_NAME", $parameters["database_name"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Name.");
 
-        $_class->addConstant("UCRM_DB_PASSWORD", $parameters["database_password"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database Password.");
+            $_class->addConstant("UCRM_DB_PASSWORD", $parameters["database_password"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Password.");
 
-        $_class->addConstant("UCRM_DB_PORT", $parameters["database_port"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database Port.");
+            $_class->addConstant("UCRM_DB_PORT", $parameters["database_port"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database Port.");
 
-        $_class->addConstant("UCRM_DB_USER", $parameters["database_user"])
-            ->setVisibility("public")
-            ->addComment("@const string The UCRM Database User.");
+            $_class->addConstant("UCRM_DB_USER", $parameters["database_user"])
+                ->setVisibility("public")
+                ->addComment("@const string The UCRM Database User.");
+        }
 
         #endregion
 
