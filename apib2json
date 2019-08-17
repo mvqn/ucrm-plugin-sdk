@@ -1,0 +1,106 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . "/vendor/autoload.php";
+
+$usage =
+    "\n".
+    "Usage: apib2json <prefix> [<endpoint>]\n" .
+    "\n" .
+    "    prefix     The blueprint sub-domain like <prefix>.docs.apiary.io (i.e. 'ucrm', 'ucrmbeta', etc...)\n" .
+    "    endpoint   A specific endpoint (i.e. '/version', '/currency', etc...)\n" .
+    "\n"
+;
+
+if($argc === 1)
+    die($usage);
+
+$prefix = $argv[1];
+$url = "https://$prefix.docs.apiary.io/api-description-document";
+$contents = "";
+
+if($argc > 1)
+{
+    $headers = @get_headers($url);
+
+    if(!$headers || $headers[0] === "HTTP/1.0 404 Not Found" || $headers[0] === "HTTP/1.1 404 Not Found")
+        die("Could not find the APIB at '$url'; maybe check your prefix?\n");
+
+    $contents = file_get_contents($url);
+}
+
+$endpoint = "";
+
+if($argc > 2)
+    $endpoint = $argv[2];
+
+
+
+if(!file_exists(__DIR__ . "/.cache/"))
+    mkdir(__DIR__ . "/.cache/");
+
+file_put_contents(__DIR__ . "/.cache/$prefix.apib", $contents);
+
+if(!file_exists(__DIR__ . "/.cache/$prefix.json"))
+    file_put_contents(__DIR__ . "/.cache/$prefix.json", "{}");
+
+$input = realpath(__DIR__ . "/.cache/$prefix.apib");
+$output = realpath(__DIR__ . "/.cache/$prefix.json");
+
+// DEV ONLY: Normally we always want to grab the latest!
+if(file_get_contents($output) === "{}")
+{
+    echo "Getting latest APIB information...\n";
+    echo exec("docker run --rm -i bugyik/apib2json --pretty < $input > $output");
+}
+// DEV ONLY
+
+$json = json_decode(file_get_contents($output), true);
+
+
+$endpoints = [];
+
+
+foreach(array_keys($json) as $key)
+{
+
+
+    if(preg_match("#^\[(\w+)\](.+)*$#", $key, $matches))
+    {
+        if ($endpoint === "" || (
+            $endpoint !== "" && $matches && count($matches) > 1 && strpos($matches[2], $endpoint) === 0))
+        {
+            $method = $matches[1];
+            $ep = $matches[2];
+            $params = [];
+            $query = [];
+
+            if(preg_match_all("#(?<={)(.+?)(?=})#", $ep, $variables))
+            {
+                foreach($variables[1] as $variable)
+                {
+                    if(strpos($variable, "?") === 0)
+                        $query = explode(",", str_replace("?", "", $variable));
+                    else
+                        array_push($params, $variable);
+                }
+            }
+
+            array_push($endpoints,
+            [
+                "key" => $key,
+                "method" => $method,
+                "endpoint" => $ep,
+                "params" => $params,
+                "query" => $query,
+            ]);
+        }
+    }
+
+
+}
+
+var_dump($endpoints);
+
+
