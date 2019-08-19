@@ -63,6 +63,10 @@ class PluginAuthentication
         if(Plugin::environment() === "dev")
             return $next($request, $response);
 
+        // Allow localhost!
+        if($request->getUri()->getHost() === "localhost")
+            return $next($request, $response);
+
         // IF a Session is not already started, THEN start one!
         if (session_status() === PHP_SESSION_NONE)
             session_start();
