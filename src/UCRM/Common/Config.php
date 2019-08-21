@@ -145,8 +145,8 @@ final class Config extends AutoObject
         }
         catch(CryptoKeyNotFoundException $e)
         {
-            // TODO: Determine the best way to handle this!
-            //var_dump($cryptoKey);
+            // TODO: Determine the best way to handle this; currently, we just set $cryptoKey to null!
+            $cryptoKey = null;
         }
 
         // Get a collection of all rows of the option table from the database!
@@ -170,7 +170,7 @@ final class Config extends AutoObject
         // SMTP PASSWORD
         $option = $options->where("code", "MAILER_PASSWORD")->first();
         if($option && $option->getValue() !== null)
-            self::$smtpPassword = $option->getValue() !== "" ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
+            self::$smtpPassword = ($option->getValue() !== "" && $cryptoKey !== null) ? Plugin::decrypt($option->getValue(), $cryptoKey) : null;
 
         //if (self::$smtpPassword === null || self::$smtpPassword === "")
         //    Log::error("SMTP Password could not be determined by UCRM Settings!", \Exception::class);
