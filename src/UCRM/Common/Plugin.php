@@ -211,7 +211,7 @@ final class Plugin
         $ucrm = realpath($root."/ucrm.json");
 
         // IF the ucrm.json path is invalid or does not exist...
-        if(!$ucrm || !file_exists($ucrm) || !is_file($ucrm))
+        if(self::environment($root) === "prod" && (!$ucrm || !file_exists($ucrm) || !is_file($ucrm)))
         {
             // NOTE: This is a required Plugin file, so it should ALWAYS exist!
             // THEN throw an Exception, as we cannot do anything else without this file!
@@ -1312,9 +1312,14 @@ final class Plugin
      * @return string
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function environment(): string
+    public static function environment(string $root = ""): string
     {
-        return (file_exists(self::getRootPath() . "/.env")) ? "dev" : "prod";
+        if($root === "" && self::$_rootPath !== "")
+            $root = self::$_rootPath;
+
+        return (file_exists($root . "/.env") || basename($root) === "src") ? "dev" : "prod";
+
+        //return (file_exists(self::getRootPath() . "/.env")) ? "dev" : "prod";
     }
 
     #endregion
