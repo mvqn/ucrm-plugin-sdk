@@ -58,8 +58,30 @@ switch ($argv[1])
 
     // Bundle the 'zip/' directory into a package ready for Plugin installation on the UCRM server.
     case "bundle":
-        //Plugin::bundle($pluginPath, $pluginName."_".$pluginVersion, ".zipignore", $projectPath);
+        $originalPath = $projectPath."\\composer";
+        $revisionPath = $projectPath."\\src\\composer";
+
+        echo "Copying composer.json to src\\...\n";
+        echo exec("copy $originalPath.json $revisionPath.json") . "\n";
+        echo "Copying composer.lock to src\\...\n";
+        echo exec("copy $originalPath.lock $revisionPath.lock") . "\n";
+
+        echo "Fixing composer.json...\n";
+        $contents = file_get_contents("$revisionPath.json");
+        $contents = str_replace("src/", "./", $contents);
+        file_put_contents("$revisionPath.json", $contents);
+        echo exec("cd src\\ && composer --no-interaction --verbose dump-autoload");
+
         Plugin::bundle($pluginPath, $pluginName, $pluginPath."/.zipignore", $projectPath);
+
+        echo "Removing revised composer.json...\n";
+        echo exec("del /F $revisionPath.json");
+        echo "Removing revised composer.lock...\n";
+        echo exec("del /F $revisionPath.lock");
+
+        echo "Reverting autoload classes...\n";
+        echo exec("composer --no-interaction --verbose dump-autoload");
+
         break;
 
     case "sync":
