@@ -188,6 +188,14 @@ final class Plugin
 
         #endregion
 
+        // IF an .env file exists in the project, THEN load it!
+        if(file_exists($root."/.env"))
+            (new \Dotenv\Dotenv($root, ".env"))->load();
+
+        if(file_exists($root."/.env.local"))
+            (new \Dotenv\Dotenv($root, ".env.local"))->load();
+
+
         #region REQUIRED: /manifest.json
 
         // Get the absolute "manifest.json" path, relative to the "root" path.
@@ -211,7 +219,7 @@ final class Plugin
         $ucrm = realpath($root."/ucrm.json");
 
         // IF the ucrm.json path is invalid or does not exist...
-        if(self::environment($root) === "prod" && (!$ucrm || !file_exists($ucrm) || !is_file($ucrm)))
+        if(!$ucrm || !file_exists($ucrm) || !is_file($ucrm))
         {
             // NOTE: This is a required Plugin file, so it should ALWAYS exist!
             // THEN throw an Exception, as we cannot do anything else without this file!
@@ -1310,16 +1318,19 @@ final class Plugin
 
     /**
      * @return string
-     * @throws Exceptions\PluginNotInitializedException
      */
     public static function environment(string $root = ""): string
     {
+        if($env = getenv("ENVIRONMENT"))
+            return $env;
+
         if($root === "" && self::$_rootPath !== "")
             $root = self::$_rootPath;
 
-        return (file_exists($root . "/.env") || basename($root) === "src") ? "dev" : "prod";
+        if($root && basename($root) === "src")
+            return "development";
 
-        //return (file_exists(self::getRootPath() . "/.env")) ? "dev" : "prod";
+        return "production";
     }
 
     #endregion

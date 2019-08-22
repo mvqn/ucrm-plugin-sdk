@@ -60,7 +60,7 @@ class PluginAuthentication
     public function __invoke(Request $request, Response $response, callable $next): Response
     {
         // IF this Plugin is in development mode, THEN skip this Middleware!
-        if(Plugin::environment() === "dev")
+        if(Plugin::environment() === "development")
             return $next($request, $response);
 
         // Allow localhost!
