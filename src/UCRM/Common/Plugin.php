@@ -1321,7 +1321,7 @@ final class Plugin
      */
     public static function environment(string $root = ""): string
     {
-        if($env = getenv("ENVIRONMENT"))
+        if($env = getenv("PLUGIN_MODE"))
             return $env;
 
         if($root === "" && self::$_rootPath !== "")
