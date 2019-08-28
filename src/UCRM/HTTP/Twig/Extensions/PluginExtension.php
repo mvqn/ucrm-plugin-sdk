@@ -147,7 +147,7 @@ final class PluginExtension extends \Twig_Extension implements \Twig_Extension_G
         if(!class_exists($this->settings) || !is_subclass_of($this->settings, SettingsBase::class, true))
             throw new \Exception("A valid Settings class was not found; was Plugin::createSettings() called first?");
 
-        self::$globals["env"] = Plugin::environment();
+        self::$globals["env"] = Plugin::mode();
         self::$globals["hostUrl"] = rtrim(constant("{$this->settings}::UCRM_PUBLIC_URL"), "/");
         self::$globals["baseUrl"] = "/_plugins/" . constant("{$this->settings}::PLUGIN_NAME") . "/public.php";
         self::$globals["homeRoute"] = "?/";

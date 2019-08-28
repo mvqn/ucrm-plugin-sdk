@@ -51,6 +51,11 @@ final class Plugin
      */
     private const _DEFAULT_SETTINGS_CLASSNAME = "Settings";
 
+
+    public const MODE_PRODUCTION    = "production";
+    public const MODE_DEVELOPMENT   = "development";
+
+
     #endregion
 
     #region MODULES
@@ -1319,18 +1324,25 @@ final class Plugin
     /**
      * @return string
      */
-    public static function environment(string $root = ""): string
+    public static function mode(): string
     {
-        if($env = getenv("PLUGIN_MODE"))
-            return $env;
+        //$root = self::$_rootPath ?: realpath(__DIR__ . "/../../../../../../../");
+        $configPath = realpath(self::getDataPath() . "/config.json");
 
-        if($root === "" && self::$_rootPath !== "")
-            $root = self::$_rootPath;
+        if($configPath)
+        {
+            $config = json_decode(file_get_contents($configPath), true);
 
-        if($root && basename($root) === "src")
-            return "development";
+            if (json_last_error() === JSON_ERROR_NONE && array_key_exists("development", $config))
+                return $config["development"] ? self::MODE_DEVELOPMENT : self::MODE_PRODUCTION;
+        }
 
-        return "production";
+        throw new Exception("Mode could not be determined!");
+
+        //if($root && basename($root) === "src")
+        //    return "development";
+
+        //return "production";
     }
 
     #endregion
