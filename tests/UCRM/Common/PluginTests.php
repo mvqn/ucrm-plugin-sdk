@@ -426,10 +426,70 @@ class PluginTests extends TestCase
             unlink($path);
     }
 
+    #endregion
 
+    #region SETTINGS
 
+    /**
+     * @covers ::createSettings
+     * @group Settings
+     */
+    public function testCreateSettings()
+    {
+        Plugin::initialize(self::EXAMPLE_ROOT);
+        $this->assertTrue(Plugin::isInitialized());
+
+        Plugin::createSettings();
+
+        $path = self::EXAMPLE_ROOT . "/server/App/Settings.php";
+
+        $this->assertFileExists($path);
+
+        if(realpath($path))
+            unlink($path);
+    }
 
     #endregion
 
+    #region ENCRYPTION
+
+    // TODO: Create encryption/decryption tests!
+
+    #endregion
+
+    #region ENVIRONMENT
+
+    /**
+     * @covers ::mode
+     * @group Environment
+     */
+    public function testMode()
+    {
+        Plugin::initialize(self::EXAMPLE_ROOT);
+        $this->assertTrue(Plugin::isInitialized());
+
+        $mode = Plugin::mode();
+        $this->assertEquals("development", $mode);
+    }
+
+    #endregion
+
+    #region DATABASE
+
+    /**
+     * @covers ::database
+     * @group Database
+     */
+    public function testDatabase()
+    {
+        Plugin::initialize(self::EXAMPLE_ROOT);
+        $this->assertTrue(Plugin::isInitialized());
+
+        $pdo = Plugin::database();
+        //$this->assertEquals("development", $mode);
+        $this->assertNotNull($pdo);
+    }
+
+    #endregion
 
 }

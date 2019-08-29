@@ -1349,6 +1349,7 @@ final class Plugin
 
     /**
      * @return string
+     * @throws Exceptions\PluginNotInitializedException
      */
     public static function mode(): string
     {
