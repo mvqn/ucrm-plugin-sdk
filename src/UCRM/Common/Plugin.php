@@ -54,7 +54,9 @@ final class Plugin
 
     public const MODE_PRODUCTION    = "production";
     public const MODE_DEVELOPMENT   = "development";
+    public const MODE_TESTING       = "testing";
 
+    public const PATH_SOURCE        = "server";
 
     #endregion
 
@@ -124,6 +126,8 @@ final class Plugin
      *   - See individual options notes below.
      ******************************************************************************************************************/
 
+    private static $_initialized = false;
+
     /**
      * @var array The Plugin's options.
      */
@@ -132,7 +136,8 @@ final class Plugin
             // A list of any required modules.
             "modules" => [
                 // None required by default!
-            ]
+            ],
+            "forcedMode" => null,
         ];
 
     /**
@@ -211,9 +216,9 @@ final class Plugin
         {
             // NOTE: This is a required Plugin file, so it should ALWAYS exist!
             // THEN throw an Exception, as we cannot do anything else without this file!
-            throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'manifest.json' file!\n".
-                "- Provided: '$root/manifest.json'\n");
+            throw new Exceptions\RequiredFileNotFoundException("\n".
+                "The provided root path does not contain a 'manifest.json' file!\n".
+                "- Provided: '$root'\n");
         }
 
         #endregion
@@ -229,8 +234,8 @@ final class Plugin
             // NOTE: This is a required Plugin file, so it should ALWAYS exist!
             // THEN throw an Exception, as we cannot do anything else without this file!
             throw new Exceptions\RequiredFileNotFoundException(
-                "The provided root path '$root' does not contain a 'ucrm.json' file!\n".
-                "- Provided: '$root/ucrm.json'\n");
+                "The provided root path does not contain a 'ucrm.json' file!\n".
+                "- Provided: '$root'\n");
         }
 
         #endregion
@@ -318,16 +323,16 @@ final class Plugin
 
         #endregion
 
-        #region OPTIONAL: /server/
+        #region OPTIONAL: /<source>/
 
         // Get the absolute "source" path, relative to the "root" path.
-        $src = realpath($root."/server/");
+        $src = realpath($root. "/" . self::PATH_SOURCE . "/");
 
         // IF the source path is invalid or does not exist...
         if(!$src || !file_exists($src))
         {
             // NOTE: By performing this check after the Plugin's required files, we can now simply create this folder!
-            mkdir($root."/server/", 0775, TRUE);
+            mkdir($root."/".self::PATH_SOURCE."/", 0775, TRUE);
 
             /*
             // THEN throw an Exception, as we cannot do anything else without this path!
@@ -346,6 +351,16 @@ final class Plugin
 
         // TODO: Add any further Plugin initialization code here!
         // ...
+
+        self::$_initialized = true;
+    }
+
+    /**
+     * @return bool Returns TRUE if the Plugin has been initialized, otherwise FALSE.
+     */
+    public static function isInitialized(): bool
+    {
+        return self::$_initialized;
     }
 
     #endregion
@@ -391,7 +406,7 @@ final class Plugin
         //    mkdir("$root/src/");
 
         // Finally, return the SOURCE path!
-        return realpath("$root/server/");
+        return realpath("$root/".self::PATH_SOURCE."/");
     }
 
     /**
@@ -436,9 +451,14 @@ final class Plugin
 
     #endregion
 
+    #region METADATA
 
-
-
+    /**
+     * @param string $path
+     *
+     * @return array|string|mixed
+     * @throws Exceptions\PluginNotInitializedException
+     */
     public static function manifest(string $path = "")
     {
         $manifest = json_decode(file_get_contents(self::getRootPath() . "/manifest.json"), true);
@@ -449,6 +469,12 @@ final class Plugin
         return Arrays::array_path($manifest, $path);
     }
 
+    /**
+     * @param string $path
+     *
+     * @return array|string|mixed
+     * @throws Exceptions\PluginNotInitializedException
+     */
     public static function ucrm(string $path = "")
     {
         $ucrm = json_decode(file_get_contents(self::getRootPath() . "/ucrm.json"), true);
@@ -459,7 +485,7 @@ final class Plugin
         return Arrays::array_path($ucrm, $path);
     }
 
-
+    #endregion
 
     #region PERMISSIONS
 
