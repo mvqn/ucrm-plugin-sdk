@@ -28,7 +28,9 @@ trait CountryHelper
         if($this->id === null)
             throw new \Exception("Country->getStates() cannot be called when the Country ID is not set!");
 
-        return State::get("/countries/".$this->id."/states");
+        //return State::get("/countries/".$this->id."/states");
+        return State::get("/countries/states", [], [ "countryId" => $this->id ]); // UCRM 3
+
     }
 
     // =================================================================================================================

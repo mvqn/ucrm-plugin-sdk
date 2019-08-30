@@ -525,9 +525,8 @@ class PluginTests extends TestCase
      */
     public function testDbQuery()
     {
-        //Plugin::initialize(self::EXAMPLE_ROOT);
         $this->assertTrue(Plugin::isInitialized());
-        //$this->assertNotNull(Plugin::dbPDO());
+        $this->assertNotNull(Plugin::dbPDO());
 
         /** @noinspection SqlResolve */
         Plugin::dbQuery(
@@ -561,7 +560,6 @@ class PluginTests extends TestCase
         $this->assertGreaterThanOrEqual(1, count($results));
         $this->assertEquals("TESTING", $results[0]["description"]);
     }
-
 
     /**
      * @covers ::dbClose

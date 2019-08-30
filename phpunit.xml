@@ -6,15 +6,22 @@
 
         <testsuite name="unit">
             <file>tests/UCRM/Common/PluginTests.php</file>
+
+
+            <file>tests/UCRM/REST/Endpoints/GeneralTests.php</file>
         </testsuite>
 
 
 
     </testsuites>
 
+
     <filter>
         <whitelist>
             <file>src/UCRM/Common/Plugin.php</file>
+
+
+            <file>src/UCRM/REST/Endpoints/General.php</file>
         </whitelist>
     </filter>
 
