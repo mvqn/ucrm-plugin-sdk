@@ -9,6 +9,7 @@ use Defuse\Crypto\Exception\BadFormatException;
 use Defuse\Crypto\Exception\EnvironmentIsBrokenException;
 use Defuse\Crypto\Exception\WrongKeyOrModifiedCiphertextException;
 use Defuse\Crypto\Key;
+use Dotenv\Dotenv;
 use Exception;
 use Monolog\Logger;
 use MVQN\Common\Arrays;
@@ -200,10 +201,10 @@ final class Plugin
 
         // IF an .env file exists in the project, THEN load it!
         if(file_exists($root."/.env"))
-            (new \Dotenv\Dotenv($root, ".env"))->load();
+            (new Dotenv($root, ".env"))->load();
 
         if(file_exists($root."/.env.local"))
-            (new \Dotenv\Dotenv($root, ".env.local"))->load();
+            (new Dotenv($root, ".env.local"))->load();
 
 
         #region REQUIRED: /manifest.json
@@ -1377,24 +1378,46 @@ final class Plugin
     #region DATABASE (plugin.db)
 
     /**
-     * @var PDO|null
+     * @var PDO|null The Plugin's internal database handle.
      */
     private static $_pdo = null;
 
     /**
-     * @return PDO
+     * Gets the Plugin's internal database handle.
+     *
+     * @return PDO|null Returns the database handle, or NULL if not connected!
+     */
+    public static function dbPDO() : ?PDO
+    {
+        return self::$_pdo;
+    }
+
+    /**
+     * Gets the Plugin's internal database path.
+     *
+     * @return string Returns the database path, even if it does not exist.
      * @throws Exceptions\PluginNotInitializedException
      */
-    public static function database(): PDO
+    public static function dbPath(): string
     {
-        $path = self::getDataPath() . DIRECTORY_SEPARATOR . "plugin.db";
+        return self::getDataPath() . DIRECTORY_SEPARATOR . "plugin.db";
+    }
 
+    /**
+     * Connects to the Plugin's internal database.
+     *
+     * @return PDO|null Returns the database handle if the connection was successful, otherwise NULL!
+     * @throws Exceptions\PluginNotInitializedException
+     */
+    public static function dbConnect(): ?PDO
+    {
+        // IF a database handle does not already exist...
         if(!self::$_pdo)
         {
             try
             {
                 self::$_pdo = new PDO(
-                    "sqlite:".$path,
+                    "sqlite:" . self::dbPath(),
                     null,
                     null,
                     [
@@ -1404,33 +1427,56 @@ final class Plugin
             }
             catch(PDOException $e)
             {
-                http_response_code(400);
-                die("The Plugin's Database could not be opened!\n$e");
+                return null;
+                //http_response_code(400);
+                //die("The Plugin's Database could not be opened!\n$e");
             }
         }
 
+        // OTHERWISE, return the existing handle.
         return self::$_pdo;
     }
 
     /**
-     * @param string $statement
+     * Queries the Plugin's internal database.
      *
-     * @return array
+     * @param string $statement The query to execute, must be valid SQL syntax.
+     *
+     * @return array Returns an array of fetched results.
      * @throws Exceptions\PluginNotInitializedException
      */
     public static function dbQuery(string $statement): array
     {
-        $pdo = self::database();
-
         try
         {
-            return $pdo->query($statement)->fetchAll();
+            $results = self::dbConnect()->query($statement)->fetchAll();
+            return $results ?: [];
         }
         catch(PDOException $e)
         {
             http_response_code(400);
             die("The Plugin's Database could not be accessed!\n$e");
         }
+    }
+
+    /**
+     * Closes the Plugin's internal database connection.
+     */
+    public static function dbClose(): void
+    {
+        if(self::$_pdo !== null)
+            self::$_pdo = NULL;
+    }
+
+    /**
+     * Deletes the Plugin's internal database, closing the connection as needed.
+     *
+     * @throws Exceptions\PluginNotInitializedException
+     */
+    public static function dbDelete(): void
+    {
+        self::dbClose();
+        unlink(self::dbPath());
     }
 
     #endregion

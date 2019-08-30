@@ -9,6 +9,9 @@ use PHPUnit\Framework\TestCase;
 use UCRM\Common\Exceptions\RequiredDirectoryNotFoundException;
 use UCRM\Common\Exceptions\RequiredFileNotFoundException;
 
+use PDO;
+use PDOException;
+
 /**
  * Class PluginTests
  *
@@ -22,7 +25,19 @@ class PluginTests extends TestCase
 
     protected function setUp(): void
     {
-        Plugin::initialize(self:: EXAMPLE_ROOT);
+        //Plugin::initialize(self:: EXAMPLE_ROOT);
+    }
+
+    protected function tearDown(): void
+    {
+        //if($database = realpath(self::EXAMPLE_ROOT . "/data/plugin.db"))
+        //    Plugin::dbDelete();
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        if($database = realpath(self::EXAMPLE_ROOT . "/data/plugin.db"))
+            Plugin::dbDelete();
     }
 
     #region INITIALIZATION
@@ -477,17 +492,108 @@ class PluginTests extends TestCase
     #region DATABASE
 
     /**
-     * @covers ::database
+     * @covers ::dbConnect
      * @group Database
      */
-    public function testDatabase()
+    public function testDbConnect()
     {
         Plugin::initialize(self::EXAMPLE_ROOT);
         $this->assertTrue(Plugin::isInitialized());
 
-        $pdo = Plugin::database();
-        //$this->assertEquals("development", $mode);
+        $pdo = Plugin::dbConnect();
         $this->assertNotNull($pdo);
+
+        $path = self::EXAMPLE_ROOT . "/data/plugin.db";
+        $this->assertFileExists($path);
+    }
+
+    /**
+     * @covers ::dbPDO
+     * @group Database
+     * @depends testDbConnect
+     */
+    public function testDbPDO()
+    {
+        $this->assertTrue(Plugin::isInitialized());
+        $this->assertNotNull(Plugin::dbPDO());
+    }
+
+    /**
+     * @covers ::dbQuery
+     * @group Database
+     * @depends testDbConnect
+     */
+    public function testDbQuery()
+    {
+        //Plugin::initialize(self::EXAMPLE_ROOT);
+        $this->assertTrue(Plugin::isInitialized());
+        //$this->assertNotNull(Plugin::dbPDO());
+
+        /** @noinspection SqlResolve */
+        Plugin::dbQuery(
+            "
+            CREATE TABLE IF NOT EXISTS tests (
+                timestamp DATETIME PRIMARY KEY DEFAULT CURRENT_TIMESTAMP,
+                description TEXT
+            );
+            "
+        );
+
+        /** @noinspection SqlResolve */
+        Plugin::dbQuery(
+            "
+            INSERT INTO tests (description) VALUES ('TESTING');
+            "
+        );
+
+        $path = self::EXAMPLE_ROOT . "/data/plugin.db";
+        $this->assertFileExists($path);
+
+        /** @noinspection SqlResolve */
+        $results = Plugin::dbQuery(
+            "
+            SELECT * FROM tests;
+            "
+        );
+
+        $this->assertNotNull($results);
+        $this->assertNotEmpty($results);
+        $this->assertGreaterThanOrEqual(1, count($results));
+        $this->assertEquals("TESTING", $results[0]["description"]);
+    }
+
+
+    /**
+     * @covers ::dbClose
+     * @group Database
+     * @depends testDbConnect
+     */
+    public function testDbClose()
+    {
+        $this->assertTrue(Plugin::isInitialized());
+        $this->assertNotNull(Plugin::dbPDO());
+
+        Plugin::dbClose();
+        $this->assertNull(Plugin::dbPDO());
+
+        $path = self::EXAMPLE_ROOT . "/data/plugin.db";
+        $this->assertFileExists($path);
+    }
+
+    /**
+     * @covers ::dbDelete
+     * @group Database
+     * @depends testDbClose
+     */
+    public function testDbDelete()
+    {
+        $this->assertTrue(Plugin::isInitialized());
+        $this->assertNull(Plugin::dbPDO());
+
+        Plugin::dbDelete();
+
+        $path = self::EXAMPLE_ROOT . "/data/plugin.db";
+        $this->assertFileNotExists($path);
     }
 
     #endregion
