@@ -9,6 +9,7 @@ namespace UCRM\HTTP\Slim\Middleware\Authentication\Authenticators;
 
 
 use MVQN\HTTP\Slim\Middleware\Authentication\Authenticators\Authenticator;
+use MVQN\HTTP\Twig\Extensions\QueryStringRoutingExtension;
 use Psr\Container\ContainerInterface as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -93,8 +94,9 @@ class PluginAuthenticator extends Authenticator
         }
 
         // Set the current session user on the container, for later use in the application.
-        $this->container["sessionUser"] = $user;
-        PluginExtension::setGlobal("sessionUser", $user);
+        //$this->container["sessionUser"] = $user;
+        //PluginExtension::setGlobal("sessionUser", $user);
+        QueryStringRoutingExtension::addGlobal("sessionUser", $user);
         $request = $request
             ->withAttribute("sessionUser", $user)
             ->withAttribute("authenticated", $valid);
