@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4e5ba10f850569b889697d950a3dccd0",
+    "content-hash": "01ef4b63de83266a66dd2fbc1ad77704",
     "packages": [
         {
             "name": "container-interop/container-interop",
@@ -638,16 +638,16 @@
         },
         {
             "name": "mvqn/http",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/http.git",
-                "reference": "97644c870b4aad32091ef43a3db298dee86d85f7"
+                "reference": "08071afa42303aaafd02871a4067f685b9c8aba9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/http/zipball/97644c870b4aad32091ef43a3db298dee86d85f7",
-                "reference": "97644c870b4aad32091ef43a3db298dee86d85f7",
+                "url": "https://api.github.com/repos/mvqn/http/zipball/08071afa42303aaafd02871a4067f685b9c8aba9",
+                "reference": "08071afa42303aaafd02871a4067f685b9c8aba9",
                 "shasum": ""
             },
             "require": {
@@ -680,7 +680,7 @@
                 }
             ],
             "description": "Some common HTTP libraries.",
-            "time": "2019-09-03T06:28:37+00:00"
+            "time": "2019-09-03T18:03:06+00:00"
         },
         {
             "name": "mvqn/rest",

@@ -79,8 +79,8 @@ class PluginAuthenticator extends Authenticator
         $user = Session::getCurrentUser();
 
         // Display an error if no user is authenticated!
-        if(!$user)
-            Log::http("No User is currently Authenticated!", Log::HTTP, 401);
+        //if(!$user)
+        //    Log::http("No User is currently Authenticated!", Log::HTTP, 401);
 
         $valid = true;
 
