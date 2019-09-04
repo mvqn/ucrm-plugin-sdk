@@ -13,6 +13,7 @@ use MVQN\HTTP\Twig\Extensions\QueryStringRoutingExtension;
 use Psr\Container\ContainerInterface as Container;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use UCRM\Common\Exceptions\PluginNotInitializedException;
 use UCRM\Common\Log;
 use UCRM\Common\Plugin;
 use UCRM\HTTP\Twig\Extensions\PluginExtension;
@@ -26,11 +27,6 @@ class PluginAuthenticator extends Authenticator
     protected const DEFAULT_ALLOWED_USER_GROUPS = [ "Admin Group" ];
 
     /**
-     * @var Container A local reference to the Slim Framework DI Container.
-     */
-    //protected $container;
-
-    /**
      * @var array An array of allowed User Groups in the UCRM for which to validate the currently authenticated user.
      */
     //protected $allowedUserGroups;
@@ -42,12 +38,10 @@ class PluginAuthenticator extends Authenticator
     /**
      * PluginAuthentication constructor.
      *
-     * @param Container $container
      * @param callable|null $verification
      */
     public function __construct(callable $verification = null)
     {
-        //$this->container = $container;
         $this->verification = $verification;
     }
 
@@ -60,17 +54,17 @@ class PluginAuthenticator extends Authenticator
      * @param callable $next The next middleware for which to pass control if this middleware does not fail.
      *
      * @return Response Returns a PSR-7 Response object.
-     * @throws \UCRM\Common\Exceptions\PluginNotInitializedException
+     * @throws PluginNotInitializedException
      */
     public function __invoke(Request $request, Response $response, callable $next): Response
     {
         // IF this Plugin is in development mode, THEN skip this Middleware!
         if(Plugin::mode() === Plugin::MODE_DEVELOPMENT)
-            return $next($request->withAttribute("authenticated", true), $response);
+            return $next($request->withAttribute("authenticator", get_class($this))->withAttribute("authenticated", true), $response);
 
         // Allow localhost!
         if($request->getUri()->getHost() === "localhost")
-            return $next($request->withAttribute("authenticated", true), $response);
+            return $next($request->withAttribute("authenticator", get_class($this))->withAttribute("authenticated", true), $response);
 
         // IF a Session is not already started, THEN start one!
         if (session_status() === PHP_SESSION_NONE)
@@ -99,6 +93,7 @@ class PluginAuthenticator extends Authenticator
         QueryStringRoutingExtension::addGlobal("sessionUser", $user);
         $request = $request
             ->withAttribute("sessionUser", $user)
+            ->withAttribute("authenticator", get_class($this))
             ->withAttribute("authenticated", $valid);
 
         // If a valid user is authenticated and
