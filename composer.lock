@@ -638,16 +638,16 @@
         },
         {
             "name": "mvqn/http",
-            "version": "1.0.3",
+            "version": "1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/http.git",
-                "reference": "ad1a9f455c74daebd92802b6a63f5160f5f8dde5"
+                "reference": "57315fa21c5a6c0fdb42379712d2839bef9f9df1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/http/zipball/ad1a9f455c74daebd92802b6a63f5160f5f8dde5",
-                "reference": "ad1a9f455c74daebd92802b6a63f5160f5f8dde5",
+                "url": "https://api.github.com/repos/mvqn/http/zipball/57315fa21c5a6c0fdb42379712d2839bef9f9df1",
+                "reference": "57315fa21c5a6c0fdb42379712d2839bef9f9df1",
                 "shasum": ""
             },
             "require": {
@@ -680,7 +680,7 @@
                 }
             ],
             "description": "Some common HTTP libraries.",
-            "time": "2019-09-03T18:14:02+00:00"
+            "time": "2019-09-04T05:49:01+00:00"
         },
         {
             "name": "mvqn/rest",

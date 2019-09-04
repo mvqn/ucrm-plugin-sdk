@@ -28,7 +28,7 @@ class PluginAuthenticator extends Authenticator
     /**
      * @var Container A local reference to the Slim Framework DI Container.
      */
-    protected $container;
+    //protected $container;
 
     /**
      * @var array An array of allowed User Groups in the UCRM for which to validate the currently authenticated user.
@@ -45,9 +45,9 @@ class PluginAuthenticator extends Authenticator
      * @param Container $container
      * @param callable|null $verification
      */
-    public function __construct(Container $container, callable $verification = null)
+    public function __construct(callable $verification = null)
     {
-        $this->container = $container;
+        //$this->container = $container;
         $this->verification = $verification;
     }
 
