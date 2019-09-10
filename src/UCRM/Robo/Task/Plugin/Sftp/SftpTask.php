@@ -17,7 +17,7 @@ use UCRM\SFTP\Exceptions\RemoteStreamException;
 /**
  * Class SftpTasks
  */
-class SftpTasks extends BaseTask implements TaskInterface
+class SftpTask extends BaseTask implements TaskInterface
 {
     private $host;
     private $port;
@@ -44,7 +44,7 @@ class SftpTasks extends BaseTask implements TaskInterface
      * @param string $user
      * @param string $pass
      *
-     * @return SftpTasks
+     * @return SftpTask
      */
     public function login(string $user, string $pass)
     {
