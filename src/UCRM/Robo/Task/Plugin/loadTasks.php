@@ -6,7 +6,7 @@ namespace UCMR\Robo\Task\Plugin;
 use Robo\Collection\CollectionBuilder;
 use UCRM\Robo\Tasks\SftpTask;
 
-trait PluginTasks
+trait loadTasks
 {
     /**
      * @param string $host  The hostname of the remote server.
