@@ -14,7 +14,7 @@ use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *
- * @TableName app_key
+ * @TableName ucrm.app_key
  *
  * @method int|null                 getId()
  * @method string|null              getName()

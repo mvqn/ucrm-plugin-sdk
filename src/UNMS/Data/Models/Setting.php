@@ -14,7 +14,7 @@ use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *
- * @TableName setting
+ * @TableName unms.setting
  *
  * @method string|null getName()
  * @method string|null getValue()

@@ -922,16 +922,16 @@
         },
         {
             "name": "mvqn/data",
-            "version": "1.2.7",
+            "version": "1.2.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mvqn/data.git",
-                "reference": "1f00a4315cfc2e807b5771655a6f5188232437ca"
+                "reference": "819de50268c447125c204b4f22e1b50fc885d86a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mvqn/data/zipball/1f00a4315cfc2e807b5771655a6f5188232437ca",
-                "reference": "1f00a4315cfc2e807b5771655a6f5188232437ca",
+                "url": "https://api.github.com/repos/mvqn/data/zipball/819de50268c447125c204b4f22e1b50fc885d86a",
+                "reference": "819de50268c447125c204b4f22e1b50fc885d86a",
                 "shasum": ""
             },
             "require": {
@@ -965,7 +965,7 @@
                 }
             ],
             "description": "A simple database library.",
-            "time": "2019-09-27T00:46:53+00:00"
+            "time": "2019-09-27T03:16:23+00:00"
         },
         {
             "name": "mvqn/dynamics",

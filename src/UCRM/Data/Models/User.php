@@ -14,7 +14,7 @@ use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *
- * @TableName user
+ * @TableName ucrm.user
  *
  * @method int|null         getUserId()
  * @method int|null         getGroupId()

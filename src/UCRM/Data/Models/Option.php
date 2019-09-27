@@ -14,7 +14,7 @@ use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *
- * @TableName option
+ * @TableName ucrm.option
  *
  * @method int|null getOptionId()
  * @method string|null getCode()
