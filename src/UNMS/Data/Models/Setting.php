@@ -1,37 +1,30 @@
 <?php
 declare(strict_types=1);
 
-namespace UCRM\Data\Models;
+namespace MVQN\UNMS\Data\Models;
 
 use MVQN\Data\Models\Model;
 use MVQN\Data\Annotations\TableNameAnnotation as TableName;
 use MVQN\Data\Annotations\ColumnNameAnnotation as ColumnName;
 
 /**
- * Class General
+ * Class Option
  *
- * @package UCRM\UNMS
+ * @package MVQN\UNMS
  * @author Ryan Spaeth <rspaeth@mvqn.net>
  * @final
  *
- * @TableName general
+ * @TableName setting
  *
- * @method int|null getGeneralId()
- * @method string|null getCode()
+ * @method string|null getName()
  * @method string|null getValue()
  */
-final class General extends Model
+final class Setting extends Model
 {
-    /**
-     * @var int
-     * @ColumnName general_id
-     */
-    protected $generalId;
-
     /**
      * @var string
      */
-    protected $code;
+    protected $name;
 
     /**
      * @var string

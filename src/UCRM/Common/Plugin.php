@@ -1482,4 +1482,33 @@ final class Plugin
     #endregion
 
 
+    public static function parameters(): ?array
+    {
+        if(file_exists("/usr/src/ucrm/app/config/parameters.yml"))
+        {
+            return Yaml::parseFile("/usr/src/ucrm/app/config/parameters.yml")["parameters"];
+        }
+
+        if(defined("ENV_LOADED"))
+        {
+            return [
+
+                "database_driver"       =>  getenv("DATABASE_DRIVER"),
+                "database_host"         =>  getenv("DATABASE_HOST"),
+                "database_port"         =>  getenv("DATABASE_PORT"),
+                "database_name"         =>  getenv("DATABASE_NAME"),
+                "database_user"         =>  getenv("DATABASE_USER"),
+                "database_password"     =>  getenv("DATABASE_PASSWORD"),
+                "database_schema_ucrm"  =>  getenv("DATABASE_SCHEMA_UCRM"),
+                "database_schema_unms"  =>  getenv("DATABASE_SCHEMA_UNMS"),
+
+                // NOTE: Add any other parameters as needed!
+            ];
+        }
+
+        return null;
+    }
+
+
+
 }

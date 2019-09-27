@@ -107,12 +107,16 @@ final class Config extends AutoObject
         // =============================================================================================================
 
         // Get the path to an optional .env file for development.
-        //$envPath = realpath(__DIR__ . "/../../../../");
         $envPath = realpath(Plugin::getRootPath()."/../");
 
         // IF an .env file exists, THEN initialize environment variables from the .env file!
-        if (file_exists($envPath . "/.env"))
+        if (file_exists($envPath . "/.env") && (!defined("ENV_LOADED") || !ENV_LOADED))
+        {
             (new Dotenv($envPath))->load();
+
+            if (!defined("ENV_LOADED"))
+                define("ENV_LOADED", true);
+        }
 
         // =============================================================================================================
         // SETTINGS
